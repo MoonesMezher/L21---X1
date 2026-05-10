@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Library Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #070b12;
+      --bg-elevated: #0f1624;
+      --card: rgba(17, 24, 39, 0.72);
+      --border: rgba(148, 163, 184, 0.14);
+      --border-strong: rgba(148, 163, 184, 0.22);
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #60a5fa;
+      --accent-glow: rgba(96, 165, 250, 0.22);
+      --success: #34d399;
+      --warn: #fbbf24;
+      --danger: #f87171;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.18), 0 24px 48px rgba(0, 0, 0, 0.38);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --font: "DM Sans", system-ui, -apple-system, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, monospace;
+      --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--text);
+      line-height: 1.55;
+      background:
+        radial-gradient(1000px 520px at 12% -8%, rgba(96, 165, 250, 0.16), transparent 55%),
+        radial-gradient(800px 420px at 92% 5%, rgba(52, 211, 153, 0.10), transparent 50%),
+        radial-gradient(900px 500px at 50% 110%, rgba(251, 191, 36, 0.06), transparent 45%),
+        var(--bg);
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { width: min(1180px, calc(100% - 2rem)); margin: 0 auto; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      backdrop-filter: blur(14px) saturate(1.2);
+      background: rgba(7, 11, 18, 0.72);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.85rem 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      letter-spacing: -0.03em;
+    }
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, rgba(96, 165, 250, 0.35), rgba(52, 211, 153, 0.18));
+      border: 1px solid var(--border-strong);
+      display: grid;
+      place-items: center;
+      font-size: 1.15rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+    .brand-text { display: flex; flex-direction: column; gap: 0.05rem; }
+    .brand-text strong { font-size: 1.05rem; font-weight: 700; }
+    .brand-text span { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+
+    .nav {
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      padding: 0.2rem;
+      border-radius: 999px;
+      background: rgba(15, 22, 36, 0.65);
+      border: 1px solid var(--border);
+    }
+    .tab {
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      padding: 0.5rem 0.95rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.875rem;
+      font-family: inherit;
+      transition: background 0.2s var(--ease), color 0.2s var(--ease), border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+    }
+    .tab:hover {
+      color: var(--text);
+      background: rgba(148, 163, 184, 0.08);
+    }
+    .tab:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .tab.active {
+      color: var(--text);
+      background: rgba(96, 165, 250, 0.16);
+      border-color: rgba(96, 165, 250, 0.35);
+      box-shadow: 0 0 20px rgba(96, 165, 250, 0.12);
+    }
+    .tab .tab-ico { margin-right: 0.35rem; opacity: 0.85; }
+
+    .page-context {
+      padding: 1.25rem 0 0.25rem;
+    }
+    .breadcrumb {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 500;
+      margin-bottom: 0.35rem;
+    }
+    .breadcrumb span { color: var(--muted); }
+    .breadcrumb .crumb-current { color: var(--text); font-weight: 600; }
+    .page-title {
+      font-size: clamp(1.35rem, 2.5vw, 1.65rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin: 0;
+    }
+    .page-desc {
+      margin: 0.35rem 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      max-width: 62ch;
+    }
+
+    .page { padding: 0 0 3.5rem; }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 1.1rem;
+      align-items: stretch;
+      margin-top: 1.1rem;
+    }
+    body[data-page="dashboard"] .hero { margin-top: 1.1rem; }
+    body:not([data-page="dashboard"]) .hero {
+      grid-template-columns: 1fr 1fr;
+      margin-top: 0.85rem;
+    }
+    body:not([data-page="dashboard"]) .card-sub { display: none; }
+    body:not([data-page="dashboard"]) .hero .hint { display: none; }
+    body:not([data-page="dashboard"]) .hero .small { font-size: 0.8rem; }
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; }
+      .topbar-inner { flex-direction: column; align-items: stretch; }
+      .nav { justify-content: flex-start; }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+    .card-head {
+      padding: 1.05rem 1.15rem;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.85rem;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(96, 165, 250, 0.06), transparent);
+    }
+    .card-title { font-weight: 700; letter-spacing: -0.02em; font-size: 1.02rem; }
+    .card-sub { font-size: 0.88rem; color: var(--muted); margin-top: 0.2rem; line-height: 1.45; max-width: 52ch; }
+    .card-body { padding: 1.1rem 1.15rem 1.15rem; }
+
+    .row { display: flex; gap: 0.85rem; flex-wrap: wrap; }
+    .grow { flex: 1; min-width: 240px; }
+
+    label {
+      display: block;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+      font-weight: 600;
+    }
+    input, select {
+      width: 100%;
+      background: rgba(15, 22, 36, 0.85);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      padding: 0.65rem 0.8rem;
+      font-size: 0.9375rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
+    }
+    input::placeholder { color: rgba(148, 163, 184, 0.55); }
+    input:focus, select:focus {
+      border-color: rgba(96, 165, 250, 0.65);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .hint { color: var(--muted); font-size: 0.875rem; margin: 0.45rem 0 0; line-height: 1.45; }
+
+    .search-wrap { position: relative; }
+    .search-wrap input { padding-left: 2.35rem; }
+    .search-wrap::before {
+      content: "⌕";
+      position: absolute;
+      left: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 1rem;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .btn {
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 1rem;
+      font-weight: 650;
+      font-size: 0.875rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: filter 0.15s, transform 0.06s var(--ease), border-color 0.15s, background 0.15s, box-shadow 0.15s;
+      user-select: none;
+    }
+    .btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .btn.primary {
+      background: linear-gradient(180deg, #7eb6ff, #3b82f6);
+      color: #0c1220;
+      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.28);
+    }
+    .btn.primary:hover:not(:disabled) { filter: brightness(1.06); }
+    .btn.ghost {
+      background: rgba(15, 22, 36, 0.65);
+      border-color: var(--border-strong);
+      color: var(--text);
+    }
+    .btn.ghost:hover:not(:disabled) { border-color: rgba(148, 163, 184, 0.35); background: rgba(148, 163, 184, 0.06); }
+    .btn.danger {
+      background: rgba(248, 113, 113, 0.12);
+      border-color: rgba(248, 113, 113, 0.45);
+      color: #fecaca;
+    }
+    .btn.danger:hover:not(:disabled) { background: rgba(248, 113, 113, 0.18); }
+    .btn.sm { padding: 0.38rem 0.65rem; font-size: 0.8125rem; border-radius: 8px; }
+    .btn.icon-only {
+      padding: 0.35rem 0.5rem;
+      min-width: 2rem;
+      font-size: 0.85rem;
+      line-height: 1;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 0.85rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+    @media (max-width: 900px) { .stats { grid-template-columns: 1fr; } }
+    .stat {
+      background: rgba(15, 22, 36, 0.55);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.9rem 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat::after {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 3px;
+      background: linear-gradient(90deg, rgba(96, 165, 250, 0.8), rgba(52, 211, 153, 0.6));
+      opacity: 0.65;
+    }
+    .stat.users::after { background: linear-gradient(90deg, #60a5fa, #a78bfa); }
+    .stat.books::after { background: linear-gradient(90deg, #34d399, #2dd4bf); }
+    .stat.loans::after { background: linear-gradient(90deg, #fbbf24, #fb923c); }
+    .stat .k { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; }
+    .stat .v { font-size: 1.55rem; font-weight: 800; letter-spacing: -0.03em; margin-top: 0.25rem; font-variant-numeric: tabular-nums; }
+
+    .table-shell {
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      overflow: auto;
+      max-height: min(58vh, 560px);
+      background: rgba(7, 11, 18, 0.35);
+    }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    th, td {
+      padding: 0.8rem 0.85rem;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: middle;
+      font-size: 0.9rem;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      color: var(--muted);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      font-weight: 700;
+      background: rgba(15, 22, 36, 0.95);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 1px 0 var(--border);
+    }
+    tbody tr:nth-child(even) td { background: rgba(148, 163, 184, 0.03); }
+    tbody tr:hover td { background: rgba(96, 165, 250, 0.06); }
+    .mono { font-family: var(--mono); font-size: 0.8rem; color: #cbd5e1; }
+    .td-id { white-space: nowrap; }
+    .id-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      max-width: 100%;
+    }
+    .id-short { cursor: help; border-bottom: 1px dotted rgba(148, 163, 184, 0.35); }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.22rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(15, 22, 36, 0.55);
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+      gap: 0.4rem;
+      white-space: nowrap;
+    }
+    .tag .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.85; }
+    .tag.ok { border-color: rgba(52, 211, 153, 0.45); color: #6ee7b7; background: rgba(52, 211, 153, 0.10); }
+    .tag.warn { border-color: rgba(251, 191, 36, 0.45); color: #fde68a; background: rgba(251, 191, 36, 0.10); }
+
+    .actions { display: flex; gap: 0.35rem; flex-wrap: wrap; align-items: center; }
+
+    .empty-panel {
+      text-align: center;
+      padding: 2.25rem 1.25rem;
+      color: var(--muted);
+    }
+    .empty-panel strong { display: block; color: var(--text); font-size: 1.05rem; margin-bottom: 0.35rem; }
+    .empty-panel p { margin: 0 auto; max-width: 40ch; font-size: 0.92rem; line-height: 1.5; }
+
+    .dash-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    @media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr; } }
+    .dash-tile {
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: rgba(17, 24, 39, 0.55);
+      padding: 1.15rem;
+      cursor: pointer;
+      text-align: left;
+      font: inherit;
+      color: inherit;
+      transition: transform 0.18s var(--ease), border-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+    }
+    .dash-tile:hover {
+      border-color: rgba(96, 165, 250, 0.35);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+    }
+    .dash-tile:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .dash-tile .emoji { font-size: 1.35rem; margin-bottom: 0.5rem; }
+    .dash-tile h3 { margin: 0; font-size: 1.05rem; font-weight: 700; letter-spacing: -0.02em; }
+    .dash-tile p { margin: 0.4rem 0 0; color: var(--muted); font-size: 0.88rem; line-height: 1.45; }
+
+    .steps {
+      margin-top: 1rem;
+      padding: 1rem 1.1rem;
+      border-radius: var(--radius-sm);
+      border: 1px dashed var(--border-strong);
+      background: rgba(96, 165, 250, 0.04);
+    }
+    .steps h4 { margin: 0 0 0.65rem; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
+    .steps ol { margin: 0; padding-left: 1.2rem; color: var(--muted); font-size: 0.9rem; line-height: 1.65; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 6, 14, 0.72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 100;
+      backdrop-filter: blur(4px);
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal {
+      width: min(560px, 100%);
+      background: rgba(15, 22, 36, 0.96);
+      border: 1px solid var(--border-strong);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      animation: modalIn 0.22s var(--ease);
+    }
+    .modal.modal--wide {
+      width: min(920px, calc(100% - 2rem));
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.98); }
+      to { opacity: 1; transform: none; }
+    }
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem 1.1rem;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(96, 165, 250, 0.08), transparent);
+    }
+    .modal-head strong { letter-spacing: -0.02em; font-size: 1.05rem; }
+    .modal-body { padding: 1.1rem; max-height: min(62vh, 520px); overflow: auto; }
+    .modal--wide .modal-body { max-height: min(78vh, 640px); }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.85rem 1.25rem;
+    }
+    @media (max-width: 560px) {
+      .detail-grid { grid-template-columns: 1fr; }
+    }
+    .detail-grid .span-2 { grid-column: 1 / -1; }
+    .detail-val { font-size: 0.95rem; margin-top: 0.15rem; color: var(--text); }
+    .modal-section-title {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .table-shell.modal-table {
+      max-height: min(36vh, 320px);
+      margin-top: 0.65rem;
+    }
+    .modal-foot {
+      padding: 0.95rem 1.1rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      background: rgba(7, 11, 18, 0.45);
+    }
+
+    .toast {
+      position: fixed;
+      right: 1rem;
+      bottom: 1rem;
+      width: min(420px, calc(100% - 2rem));
+      background: rgba(15, 22, 36, 0.96);
+      border: 1px solid var(--border-strong);
+      border-left: 4px solid var(--accent);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 0.85rem 1rem;
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast .t { font-weight: 800; font-size: 0.95rem; letter-spacing: -0.02em; }
+    .toast .m { color: var(--muted); margin-top: 0.25rem; font-size: 0.875rem; line-height: 1.45; }
+
+    .small { font-size: 0.86rem; color: var(--muted); line-height: 1.5; }
+    .divider { height: 1px; background: var(--border); margin: 1rem 0; }
+    code, .inline-code { font-family: var(--mono); font-size: 0.82em; color: #e2e8f0; }
+
+    .file-banner {
+      background: rgba(251, 191, 36, 0.10);
+      border-bottom: 1px solid rgba(251, 191, 36, 0.28);
+      color: #fde68a;
+      padding: 0.7rem 0;
+      font-size: 0.9rem;
+    }
+    .file-banner .container { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .file-banner a { color: #93c5fd; font-weight: 650; }
+
+    body.is-busy { cursor: progress; }
+  </style>
+</head>
+<body data-page="dashboard">
+  <div class="file-banner" id="fileProtocolBanner" hidden>
+    <div class="container">
+      <span>You opened this page from disk (<code>file://</code>). Browsers block or restrict requests from that origin. Run the server and open <a href="http://localhost:3000/" id="fileBannerLink">http://localhost:3000/</a> instead.</span>
+    </div>
+  </div>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">📚</div>
+        <div class="brand-text">
+          <strong>Library Desk</strong>
+          <span>Simple catalog & loans · no login</span>
+        </div>
+      </div>
+      <div class="nav" role="tablist" aria-label="Pages">
+        <button type="button" class="tab active" data-page="dashboard" role="tab" aria-selected="true"><span class="tab-ico" aria-hidden="true">◆</span>Overview</button>
+        <button type="button" class="tab" data-page="users" role="tab" aria-selected="false"><span class="tab-ico" aria-hidden="true">👤</span>Users</button>
+        <button type="button" class="tab" data-page="books" role="tab" aria-selected="false"><span class="tab-ico" aria-hidden="true">📖</span>Books</button>
+        <button type="button" class="tab" data-page="loans" role="tab" aria-selected="false"><span class="tab-ico" aria-hidden="true">🪪</span>Loans</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="container">
+      <header class="page-context" id="pageContext">
+        <div class="breadcrumb" id="breadcrumb">Library · <span class="crumb-current" id="crumbCurrent">Overview</span></div>
+        <h1 class="page-title" id="pageHeading">Welcome</h1>
+        <p class="page-desc" id="pageSub">Manage readers, titles, and checkouts in one place.</p>
+      </header>
+
+      <div class="hero" id="heroSection">
+        <div class="card" id="apiSettingsCard">
+          <div class="card-head">
+            <div>
+              <div class="card-title">API connection</div>
+              <div class="card-sub">Point the UI at your running server. CORS is enabled on the backend for other origins.</div>
+            </div>
+            <button type="button" class="btn ghost sm" id="btnPing">Check health</button>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="grow">
+                <label for="baseUrl">Base URL</label>
+                <input id="baseUrl" type="text" placeholder="http://localhost:3000" autocomplete="off" />
+                <p class="hint">Best experience: open this app from the same URL (for example <span class="inline-code">http://localhost:3000/</span>).</p>
+              </div>
+              <div class="grow">
+                <label>Status</label>
+                <div class="row" style="gap:0.5rem; align-items:center; flex-wrap:wrap">
+                  <span class="tag warn" id="healthTag"><span class="dot" aria-hidden="true"></span><span id="healthText">Not checked</span></span>
+                  <span class="tag" id="originTag"><span class="dot" aria-hidden="true"></span><span id="originText">Origin</span></span>
+                </div>
+                <p class="hint" id="statusHint">Use the tabs to switch between Users, Books, and Loans.</p>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div class="small">
+              Endpoints:
+              <span class="mono">/api/v1/users</span> ·
+              <span class="mono">/api/v1/books</span> ·
+              <span class="mono">/api/v1/loans</span> ·
+              <span class="mono">/api/health</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">At a glance</div>
+              <div class="card-sub">Counts refresh when you load data or press refresh.</div>
+            </div>
+            <button type="button" class="btn ghost sm" id="btnRefreshAll">Refresh all</button>
+          </div>
+          <div class="card-body">
+            <div class="stats">
+              <div class="stat users">
+                <div class="k">Members</div>
+                <div class="v" id="statUsers">—</div>
+              </div>
+              <div class="stat books">
+                <div class="k">Titles</div>
+                <div class="v" id="statBooks">—</div>
+              </div>
+              <div class="stat loans">
+                <div class="k">Books out</div>
+                <div class="v" id="statActiveLoans">—</div>
+              </div>
+            </div>
+            <p class="hint" style="margin-top:0.95rem">“Books out” counts catalog items where <span class="mono">isLoaned</span> is true.</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="view-dashboard" class="view" style="margin-top:1rem">
+        <div class="dash-grid" id="dashShortcuts">
+          <button type="button" class="dash-tile" data-jump="users">
+            <div class="emoji" aria-hidden="true">👤</div>
+            <h3>Members</h3>
+            <p>Add people who can borrow books. Edit profile fields anytime.</p>
+          </button>
+          <button type="button" class="dash-tile" data-jump="books">
+            <div class="emoji" aria-hidden="true">📖</div>
+            <h3>Catalog</h3>
+            <p>Maintain titles, authors, and prices. Availability updates from loans.</p>
+          </button>
+          <button type="button" class="dash-tile" data-jump="loans">
+            <div class="emoji" aria-hidden="true">🪪</div>
+            <h3>Loans</h3>
+            <p>Check a book out or mark it returned. History stays in the loans list.</p>
+          </button>
+        </div>
+        <div class="steps">
+          <h4>Typical flow</h4>
+          <ol>
+            <li>Create at least one <strong>user</strong> and one <strong>book</strong>.</li>
+            <li>Open <strong>Loans</strong> and create a loan (pick user, available book, loan length).</li>
+            <li>Use <strong>Return for user</strong> when the book comes back.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div id="view-users" class="view" hidden>
+        <div class="card" style="margin-top:1rem">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Members</div>
+              <div class="card-sub">Readers in your library. Phone and email must stay unique per your API rules.</div>
+            </div>
+            <div class="actions">
+              <button type="button" class="btn ghost sm" id="btnUsersReload">Reload</button>
+              <button type="button" class="btn primary" id="btnUsersNew">+ New user</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="toolbar">
+              <div class="row" style="align-items:center; gap:0.65rem">
+                <span class="tag" id="usersCountTag"><span class="dot" aria-hidden="true"></span><span id="usersCountText">0</span> <span style="opacity:.85">in list</span></span>
+                <span class="small">Open <strong>Profile</strong> for full details and loan history.</span>
+              </div>
+              <div style="min-width: 280px">
+                <label for="usersSearch">Filter</label>
+                <div class="search-wrap">
+                  <input id="usersSearch" type="text" placeholder="Search name, email, phone, or id…" autocomplete="off" />
+                </div>
+              </div>
+            </div>
+            <div class="table-shell">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Age</th>
+                    <th>Phone</th>
+                    <th style="min-width: 220px">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="view-books" class="view" hidden>
+        <div class="card" style="margin-top:1rem">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Catalog</div>
+              <div class="card-sub">Physical or digital titles. “Loaned” is driven by the loans API, not manual toggles.</div>
+            </div>
+            <div class="actions">
+              <button type="button" class="btn ghost sm" id="btnBooksReload">Reload</button>
+              <button type="button" class="btn primary" id="btnBooksNew">+ New book</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="toolbar">
+              <div class="row" style="align-items:center; gap:0.65rem">
+                <span class="tag" id="booksCountTag"><span class="dot" aria-hidden="true"></span><span id="booksCountText">0</span> <span style="opacity:.85">titles</span></span>
+                <span class="small">Use <strong>Profile</strong> to see loan history for a title.</span>
+              </div>
+              <div style="min-width: 280px">
+                <label for="booksSearch">Filter</label>
+                <div class="search-wrap">
+                  <input id="booksSearch" type="text" placeholder="Search title, author, or id…" autocomplete="off" />
+                </div>
+              </div>
+            </div>
+            <div class="table-shell">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Price</th>
+                    <th>Shelf</th>
+                    <th style="min-width: 220px">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="booksTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="view-loans" class="view" hidden>
+        <div class="card" style="margin-top:1rem">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Loans desk</div>
+              <div class="card-sub">Checkout and return. The table shows friendly names when the API populates relations.</div>
+            </div>
+            <div class="actions">
+              <button type="button" class="btn ghost sm" id="btnLoansReload">Reload</button>
+              <button type="button" class="btn primary" id="btnLoansNew">+ New loan</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="toolbar">
+              <div class="row" style="align-items:center; gap:0.65rem">
+                <span class="tag" id="loansCountTag"><span class="dot" aria-hidden="true"></span><span id="loansCountText">0</span> <span style="opacity:.85">records</span></span>
+                <span class="small">Returns call <span class="mono">PUT …/return/:id</span> with <span class="mono">user</span> in the body.</span>
+              </div>
+              <div style="min-width: 280px">
+                <label for="loansSearch">Filter</label>
+                <div class="search-wrap">
+                  <input id="loansSearch" type="text" placeholder="Search member, title, or id…" autocomplete="off" />
+                </div>
+              </div>
+            </div>
+            <div class="table-shell">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Borrower</th>
+                    <th>Title</th>
+                    <th>Days</th>
+                    <th>Started</th>
+                    <th style="min-width: 200px">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="loansTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-head">
+        <strong id="modalTitle">Modal</strong>
+        <button class="btn ghost" id="btnModalClose" type="button">Close</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-foot" id="modalFoot"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const STORAGE_KEY = "library-ui-base-url";
+    const $ = (id) => document.getElementById(id);
+
+    const state = {
+      page: "dashboard",
+      users: [],
+      books: [],
+      loans: [],
+      baseUrl: "",
+    };
+
+    const PAGE_META = {
+      dashboard: {
+        crumb: "Overview",
+        title: "Library overview",
+        desc: "See connection health, quick counts, and jump straight into daily tasks.",
+      },
+      users: {
+        crumb: "Members",
+        title: "Members",
+        desc: "Add readers, keep contact info accurate, and remove accounts you no longer need.",
+      },
+      books: {
+        crumb: "Catalog",
+        title: "Book catalog",
+        desc: "Maintain your collection. Loan state updates automatically when loans change.",
+      },
+      loans: {
+        crumb: "Loans",
+        title: "Loans desk",
+        desc: "Check books out and process returns. Filters help you find a record quickly.",
+      },
+    };
+
+    function updatePageChrome(page) {
+      document.body.dataset.page = page;
+      const m = PAGE_META[page] || PAGE_META.dashboard;
+      const crumb = $("crumbCurrent");
+      const head = $("pageHeading");
+      const sub = $("pageSub");
+      if (crumb) crumb.textContent = m.crumb;
+      if (head) head.textContent = m.title;
+      if (sub) sub.textContent = m.desc;
+    }
+
+    function shortId(id) {
+      if (!id) return "—";
+      const s = String(id);
+      if (s.length <= 14) return s;
+      return `${s.slice(0, 6)}…${s.slice(-4)}`;
+    }
+
+    function attrEscape(s) {
+      return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+    }
+
+    function idCellHtml(fullId) {
+      if (!fullId) return `<span class="mono">—</span>`;
+      const short = escapeHtml(shortId(fullId));
+      const a = attrEscape(fullId);
+      return `<span class="id-cell"><span class="mono id-short" title="Full id: ${a}">${short}</span><button type="button" class="btn ghost sm icon-only" data-copy="${a}" title="Copy id" aria-label="Copy id">⧉</button></span>`;
+    }
+
+    function emptyTableRow(colspan, title, desc) {
+      return `<tr><td colspan="${colspan}"><div class="empty-panel"><strong>${escapeHtml(title)}</strong><p>${escapeHtml(desc)}</p></div></td></tr>`;
+    }
+
+    function isFileProtocol() {
+      return window.location.protocol === "file:";
+    }
+
+    function defaultApiBase() {
+      if (isFileProtocol()) return "http://localhost:3000";
+      const o = window.location.origin;
+      if (!o || o === "null") return "http://localhost:3000";
+      return o;
+    }
+
+    function normalizeBaseUrl(v) {
+      const raw = (v || "").trim();
+      if (!raw) return "http://localhost:3000";
+      return raw.replace(/\/+$/, "");
+    }
+
+    function nowIsoShort() {
+      return new Date().toISOString().slice(0, 19).replace("T", " ");
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function toast(title, message) {
+      const el = $("toast");
+      el.innerHTML = `<div class="t">${escapeHtml(title)}</div><div class="m">${escapeHtml(message || "")}</div>`;
+      el.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => el.classList.remove("show"), 2600);
+    }
+
+    function setHealth(ok, text) {
+      const tag = $("healthTag");
+      const t = $("healthText");
+      t.textContent = text;
+      tag.classList.remove("ok", "warn");
+      tag.classList.add(ok ? "ok" : "warn");
+    }
+
+    function setOriginHint() {
+      if (isFileProtocol()) {
+        $("originText").textContent = "file:// page (not a web origin)";
+        $("originTag").classList.remove("ok", "warn");
+        $("originTag").classList.add("warn");
+        const hint = $("statusHint");
+        if (hint) {
+          hint.textContent = "Use API base http://localhost:3000 with the server running, or open the site from the server URL.";
+        }
+        return;
+      }
+      const origin = window.location.origin;
+      const base = normalizeBaseUrl($("baseUrl").value);
+      const same = base === origin;
+      $("originText").textContent = same ? "Same-origin" : "Different origin (CORS)";
+      $("originTag").classList.remove("ok", "warn");
+      $("originTag").classList.add(same ? "ok" : "warn");
+    }
+
+    async function api(path, options = {}) {
+      const url = state.baseUrl + path;
+      const res = await fetch(url, {
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+        ...options,
+      });
+      const text = await res.text();
+      let data = null;
+      try { data = text ? JSON.parse(text) : null; } catch (_) { data = text; }
+      if (!res.ok) {
+        const msg = (data && data.message) ? data.message : (typeof data === "string" ? data : "Request failed");
+        const err = new Error(msg);
+        err.status = res.status;
+        err.data = data;
+        throw err;
+      }
+      return data;
+    }
+
+    function showPage(page) {
+      state.page = page;
+      updatePageChrome(page);
+      document.querySelectorAll(".tab").forEach((b) => {
+        const active = b.dataset.page === page;
+        b.classList.toggle("active", active);
+        b.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      document.querySelectorAll(".view").forEach((v) => v.hidden = true);
+      $("view-" + page).hidden = false;
+      if (page === "users") renderUsers();
+      if (page === "books") renderBooks();
+      if (page === "loans") renderLoans();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function openModal(title, bodyHtml, actions, opts = {}) {
+      const modalEl = document.querySelector("#modalBackdrop .modal");
+      if (modalEl) modalEl.classList.toggle("modal--wide", !!opts.wide);
+      $("modalTitle").textContent = title;
+      $("modalBody").innerHTML = bodyHtml;
+      const foot = $("modalFoot");
+      foot.innerHTML = "";
+      for (const a of actions) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn " + (a.kind || "ghost");
+        btn.textContent = a.label;
+        btn.onclick = a.onClick;
+        foot.appendChild(btn);
+      }
+      $("modalBackdrop").classList.add("show");
+      $("modalBackdrop").setAttribute("aria-hidden", "false");
+      const firstInput = $("modalBody").querySelector("input,select");
+      if (firstInput) firstInput.focus();
+    }
+
+    function closeModal() {
+      const modalEl = document.querySelector("#modalBackdrop .modal");
+      if (modalEl) modalEl.classList.remove("modal--wide");
+      $("modalBackdrop").classList.remove("show");
+      $("modalBackdrop").setAttribute("aria-hidden", "true");
+      $("modalBody").innerHTML = "";
+      $("modalFoot").innerHTML = "";
+    }
+
+    function formatDt(iso) {
+      if (!iso) return "—";
+      return String(iso).slice(0, 19).replace("T", " ");
+    }
+
+    async function openUserProfile(userId) {
+      openModal(
+        "Loading…",
+        `<p class="hint" style="margin:0">Fetching member profile and loan history…</p>`,
+        [{ label: "Cancel", kind: "ghost", onClick: closeModal }],
+        { wide: true }
+      );
+      try {
+        const u = await api(`/api/v1/users/${encodeURIComponent(userId)}`);
+        let loans = Array.isArray(u.loans) ? u.loans.slice() : [];
+        loans.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+        const loansRows = loans.length
+          ? loans.map((l) => {
+              const book = l.book;
+              const title = book && book.title ? book.title : "—";
+              const author = book && book.author ? book.author : "—";
+              const shelf =
+                !book
+                  ? `<span class="tag">—</span>`
+                  : book.isLoaned
+                    ? `<span class="tag warn"><span class="dot" aria-hidden="true"></span>Loaned</span>`
+                    : `<span class="tag ok"><span class="dot" aria-hidden="true"></span>Available</span>`;
+              return `<tr>
+                <td class="td-id">${idCellHtml(l._id)}</td>
+                <td><strong>${escapeHtml(title)}</strong></td>
+                <td>${escapeHtml(author)}</td>
+                <td><span class="mono">${escapeHtml(l.days)}</span></td>
+                <td>${shelf}</td>
+                <td class="mono">${escapeHtml(formatDt(l.createdAt))}</td>
+              </tr>`;
+            }).join("")
+          : `<tr><td colspan="6"><div class="empty-panel"><strong>No loans yet</strong><p>When this member borrows books, each loan appears here (newest first).</p></div></td></tr>`;
+
+        const joined = u.createdAt
+          ? `<div><label>Joined</label><div class="detail-val mono">${escapeHtml(formatDt(u.createdAt))}</div></div>`
+          : "";
+        const updated = u.updatedAt
+          ? `<div><label>Last updated</label><div class="detail-val mono">${escapeHtml(formatDt(u.updatedAt))}</div></div>`
+          : "";
+
+        const body = `
+          <div class="detail-grid">
+            <div><label>Username</label><div class="detail-val"><strong>${escapeHtml(u.username)}</strong></div></div>
+            <div><label>Email</label><div class="detail-val">${escapeHtml(u.email)}</div></div>
+            <div><label>Age</label><div class="detail-val">${escapeHtml(u.age)}</div></div>
+            <div><label>Phone</label><div class="detail-val">${escapeHtml(u.phone || "—")}</div></div>
+            <div class="span-2"><label>Member ID</label><div class="detail-val">${idCellHtml(u._id)}</div></div>
+            ${joined}
+            ${updated}
+          </div>
+          <div class="divider"></div>
+          <h4 class="modal-section-title">Loan history <span class="tag"><span class="dot" aria-hidden="true"></span>${loans.length} record${loans.length === 1 ? "" : "s"}</span></h4>
+          <p class="hint" style="margin-top:0.35rem">Sorted with the most recent loan first. Book rows use data from the API (<span class="mono">populate("book")</span>).</p>
+          <div class="table-shell modal-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Loan</th>
+                  <th>Title</th>
+                  <th>Author</th>
+                  <th>Days</th>
+                  <th>Book now</th>
+                  <th>Started</th>
+                </tr>
+              </thead>
+              <tbody>${loansRows}</tbody>
+            </table>
+          </div>
+        `;
+
+        const editPayload = {
+          _id: u._id,
+          username: u.username,
+          email: u.email,
+          age: u.age,
+          phone: u.phone,
+        };
+
+        openModal(
+          `Member · ${u.username}`,
+          body,
+          [
+            { label: "Close", kind: "ghost", onClick: closeModal },
+            {
+              label: "Edit member",
+              kind: "primary",
+              onClick: () => {
+                closeModal();
+                openUserModal("edit", editPayload);
+              },
+            },
+          ],
+          { wide: true }
+        );
+      } catch (e) {
+        openModal(
+          "Could not load member",
+          `<p class="hint">${escapeHtml(e.message)}</p><p class="hint">Check the user id and that <span class="mono">GET /api/v1/users/:id</span> returns <span class="mono">loans</span>.</p>`,
+          [{ label: "Close", kind: "ghost", onClick: closeModal }],
+          { wide: true }
+        );
+      }
+    }
+
+    async function openBookProfile(bookId) {
+      openModal(
+        "Loading…",
+        `<p class="hint" style="margin:0">Fetching title details and loan history…</p>`,
+        [{ label: "Cancel", kind: "ghost", onClick: closeModal }],
+        { wide: true }
+      );
+      try {
+        const b = await api(`/api/v1/books/${encodeURIComponent(bookId)}`);
+        let loans = Array.isArray(b.loans) ? b.loans.slice() : [];
+        loans.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+        const loansRows = loans.length
+          ? loans.map((l) => {
+              const u = l.user;
+              const who =
+                !u
+                  ? "—"
+                  : typeof u === "string"
+                    ? escapeHtml(u)
+                    : `<strong>${escapeHtml(u.username || "—")}</strong><br /><span class="small">${escapeHtml(u.email || "")}</span>`;
+              return `<tr>
+                <td class="td-id">${idCellHtml(l._id)}</td>
+                <td>${who}</td>
+                <td><span class="mono">${escapeHtml(l.days)}</span></td>
+                <td class="mono">${escapeHtml(formatDt(l.createdAt))}</td>
+              </tr>`;
+            }).join("")
+          : `<tr><td colspan="4"><div class="empty-panel"><strong>No loans yet</strong><p>When someone borrows this title, each loan appears here (newest first).</p></div></td></tr>`;
+
+        const shelf = b.isLoaned
+          ? `<span class="tag warn"><span class="dot" aria-hidden="true"></span>On loan</span>`
+          : `<span class="tag ok"><span class="dot" aria-hidden="true"></span>Available</span>`;
+        const created = b.createdAt
+          ? `<div><label>Added</label><div class="detail-val mono">${escapeHtml(formatDt(b.createdAt))}</div></div>`
+          : "";
+        const updated = b.updatedAt
+          ? `<div><label>Last updated</label><div class="detail-val mono">${escapeHtml(formatDt(b.updatedAt))}</div></div>`
+          : "";
+
+        const body = `
+          <div class="detail-grid">
+            <div class="span-2"><label>Title</label><div class="detail-val"><strong>${escapeHtml(b.title)}</strong></div></div>
+            <div><label>Author</label><div class="detail-val">${escapeHtml(b.author)}</div></div>
+            <div><label>Price</label><div class="detail-val mono">${escapeHtml(money(b.price))}</div></div>
+            <div><label>Shelf</label><div class="detail-val">${shelf}</div></div>
+            <div class="span-2"><label>Book ID</label><div class="detail-val">${idCellHtml(b._id)}</div></div>
+            ${created}
+            ${updated}
+          </div>
+          <div class="divider"></div>
+          <h4 class="modal-section-title">Loan history <span class="tag"><span class="dot" aria-hidden="true"></span>${loans.length} record${loans.length === 1 ? "" : "s"}</span></h4>
+          <p class="hint" style="margin-top:0.35rem">Borrowers come from <span class="mono">populate("user")</span> on each loan. Newest first.</p>
+          <div class="table-shell modal-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Loan</th>
+                  <th>Borrower</th>
+                  <th>Days</th>
+                  <th>Started</th>
+                </tr>
+              </thead>
+              <tbody>${loansRows}</tbody>
+            </table>
+          </div>
+        `;
+
+        const editPayload = {
+          _id: b._id,
+          title: b.title,
+          author: b.author,
+          price: b.price,
+          isLoaned: b.isLoaned,
+        };
+
+        openModal(
+          `Book · ${b.title}`,
+          body,
+          [
+            { label: "Close", kind: "ghost", onClick: closeModal },
+            {
+              label: "Edit book",
+              kind: "primary",
+              onClick: () => {
+                closeModal();
+                openBookModal("edit", editPayload);
+              },
+            },
+          ],
+          { wide: true }
+        );
+      } catch (e) {
+        openModal(
+          "Could not load book",
+          `<p class="hint">${escapeHtml(e.message)}</p><p class="hint">Check the book id and that <span class="mono">GET /api/v1/books/:id</span> returns <span class="mono">loans</span>.</p>`,
+          [{ label: "Close", kind: "ghost", onClick: closeModal }],
+          { wide: true }
+        );
+      }
+    }
+
+    function money(v) {
+      const n = Number(v);
+      if (Number.isNaN(n)) return String(v ?? "");
+      return n.toFixed(2);
+    }
+
+    function userLabel(u) {
+      if (!u) return "—";
+      if (typeof u === "string") return u;
+      return `${u.username || "user"} (${u._id || ""})`.trim();
+    }
+
+    function bookLabel(b) {
+      if (!b) return "—";
+      if (typeof b === "string") return b;
+      return `${b.title || "book"} (${b._id || ""})`.trim();
+    }
+
+    function getSearchValue(id) {
+      const el = $(id);
+      return (el && el.value ? el.value : "").trim().toLowerCase();
+    }
+
+    function updateStats() {
+      $("statUsers").textContent = String(state.users.length);
+      $("statBooks").textContent = String(state.books.length);
+      const active = state.books.filter((b) => b && b.isLoaned === true).length;
+      $("statActiveLoans").textContent = String(active);
+    }
+
+    async function pingHealth() {
+      try {
+        const data = await api("/api/health");
+        setHealth(true, data?.message || "OK");
+        toast("Health OK", data?.message || "API is healthy");
+      } catch (e) {
+        setHealth(false, `Error: ${e.status || ""} ${e.message}`.trim());
+        toast("Health failed", e.message);
+      }
+    }
+
+    async function loadUsers() {
+      state.users = await api("/api/v1/users");
+      $("usersCountText").textContent = String(state.users.length);
+      updateStats();
+    }
+
+    async function loadBooks() {
+      state.books = await api("/api/v1/books");
+      $("booksCountText").textContent = String(state.books.length);
+      updateStats();
+    }
+
+    async function loadLoans() {
+      state.loans = await api("/api/v1/loans");
+      $("loansCountText").textContent = String(state.loans.length);
+      updateStats();
+    }
+
+    function renderUsers() {
+      const q = getSearchValue("usersSearch");
+      const list = !q ? state.users : state.users.filter((u) => {
+        const s = `${u._id} ${u.username} ${u.email} ${u.phone || ""}`.toLowerCase();
+        return s.includes(q);
+      });
+      const tbody = $("usersTbody");
+      tbody.innerHTML = list.map((u) => `
+        <tr>
+          <td class="td-id">${idCellHtml(u._id)}</td>
+          <td><strong>${escapeHtml(u.username)}</strong></td>
+          <td>${escapeHtml(u.email)}</td>
+          <td>${escapeHtml(u.age)}</td>
+          <td>${escapeHtml(u.phone || "—")}</td>
+          <td>
+            <div class="actions">
+              <button type="button" class="btn primary sm" data-action="user-profile" data-id="${escapeHtml(u._id)}">Profile</button>
+              <button type="button" class="btn ghost sm" data-action="edit-user" data-id="${escapeHtml(u._id)}">Edit</button>
+              <button type="button" class="btn danger sm" data-action="delete-user" data-id="${escapeHtml(u._id)}">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join("") || (
+        state.users.length === 0
+          ? emptyTableRow(6, "No members yet", "Create your first user with “+ New user”, or fix the API URL if loading failed.")
+          : emptyTableRow(6, "No matches", "Try a shorter search, or clear the filter to see everyone again.")
+      );
+    }
+
+    function renderBooks() {
+      const q = getSearchValue("booksSearch");
+      const list = !q ? state.books : state.books.filter((b) => {
+        const s = `${b._id} ${b.title} ${b.author}`.toLowerCase();
+        return s.includes(q);
+      });
+      const tbody = $("booksTbody");
+      tbody.innerHTML = list.map((b) => `
+        <tr>
+          <td class="td-id">${idCellHtml(b._id)}</td>
+          <td><strong>${escapeHtml(b.title)}</strong></td>
+          <td>${escapeHtml(b.author)}</td>
+          <td class="mono">${escapeHtml(money(b.price))}</td>
+          <td>${b.isLoaned ? `<span class="tag warn"><span class="dot" aria-hidden="true"></span>On loan</span>` : `<span class="tag ok"><span class="dot" aria-hidden="true"></span>Available</span>`}</td>
+          <td>
+            <div class="actions">
+              <button type="button" class="btn primary sm" data-action="book-profile" data-id="${escapeHtml(b._id)}">Profile</button>
+              <button type="button" class="btn ghost sm" data-action="edit-book" data-id="${escapeHtml(b._id)}">Edit</button>
+              <button type="button" class="btn danger sm" data-action="delete-book" data-id="${escapeHtml(b._id)}">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join("") || (
+        state.books.length === 0
+          ? emptyTableRow(6, "No books yet", "Add titles with “+ New book”, or confirm the API is reachable.")
+          : emptyTableRow(6, "No matches", "Adjust your search to match title, author, or id.")
+      );
+    }
+
+    function renderLoans() {
+      const q = getSearchValue("loansSearch");
+      const list = !q ? state.loans : state.loans.filter((l) => {
+        const u = (l.user && (l.user.username || l.user.email || l.user._id)) ? `${l.user.username || ""} ${l.user.email || ""} ${l.user._id || ""}` : `${l.user || ""}`;
+        const b = (l.book && (l.book.title || l.book.author || l.book._id)) ? `${l.book.title || ""} ${l.book.author || ""} ${l.book._id || ""}` : `${l.book || ""}`;
+        const s = `${l._id} ${u} ${b}`.toLowerCase();
+        return s.includes(q);
+      });
+      const tbody = $("loansTbody");
+      tbody.innerHTML = list.map((l) => `
+        <tr>
+          <td class="td-id">${idCellHtml(l._id)}</td>
+          <td>${escapeHtml(userLabel(l.user))}</td>
+          <td>${escapeHtml(bookLabel(l.book))}</td>
+          <td><span class="mono">${escapeHtml(l.days)}</span> <span class="small" style="display:inline">days</span></td>
+          <td class="mono">${escapeHtml((l.createdAt || "").slice(0, 19).replace("T"," ") || "—")}</td>
+          <td>
+            <div class="actions">
+              <button type="button" class="btn ghost sm" data-action="return-loan" data-userid="${escapeHtml(l.user?._id || l.user)}">Return book</button>
+            </div>
+          </td>
+        </tr>
+      `).join("") || (
+        state.loans.length === 0
+          ? emptyTableRow(6, "No loan history", "Create a loan when someone borrows a book. Returns update shelf status.")
+          : emptyTableRow(6, "No matches", "Try another name, title, or id in the filter.")
+      );
+    }
+
+    function openUserModal(mode, user) {
+      const isEdit = mode === "edit";
+      openModal(
+        isEdit ? "Edit user" : "New user",
+        `
+          <div class="row">
+            <div class="grow">
+              <label>Username</label>
+              <input id="mUsername" type="text" value="${escapeHtml(user?.username || "")}" placeholder="username" />
+            </div>
+            <div class="grow">
+              <label>Email</label>
+              <input id="mEmail" type="text" value="${escapeHtml(user?.email || "")}" placeholder="email@example.com" />
+            </div>
+          </div>
+          <div class="row" style="margin-top:0.75rem">
+            <div class="grow">
+              <label>Age</label>
+              <input id="mAge" type="text" value="${escapeHtml(user?.age ?? "")}" placeholder="15+" />
+            </div>
+            <div class="grow">
+              <label>Phone</label>
+              <input id="mPhone" type="text" value="${escapeHtml(user?.phone || "")}" placeholder="+971..." />
+            </div>
+          </div>
+          ${isEdit ? `<p class="hint" style="margin-top:0.75rem">User ID: <span class="mono">${escapeHtml(user._id)}</span></p>` : `<p class="hint" style="margin-top:0.75rem">All fields are validated by the server.</p>`}
+        `,
+        [
+          { label: "Cancel", kind: "ghost", onClick: closeModal },
+          {
+            label: isEdit ? "Save changes" : "Create user",
+            kind: "primary",
+            onClick: async () => {
+              const payload = {
+                username: $("mUsername").value.trim(),
+                email: $("mEmail").value.trim(),
+                age: Number($("mAge").value.trim()),
+                phone: $("mPhone").value.trim() || undefined,
+              };
+              try {
+                if (isEdit) {
+                  await api(`/api/v1/users/${user._id}`, { method: "PUT", body: JSON.stringify(payload) });
+                  toast("User updated", "Changes saved successfully.");
+                } else {
+                  await api(`/api/v1/users`, { method: "POST", body: JSON.stringify(payload) });
+                  toast("User created", "New user added successfully.");
+                }
+                closeModal();
+                await loadUsers();
+                renderUsers();
+              } catch (e) {
+                toast("Error", e.message);
+              }
+            }
+          }
+        ]
+      );
+    }
+
+    function openBookModal(mode, book) {
+      const isEdit = mode === "edit";
+      openModal(
+        isEdit ? "Edit book" : "New book",
+        `
+          <div class="row">
+            <div class="grow">
+              <label>Title</label>
+              <input id="mTitle" type="text" value="${escapeHtml(book?.title || "")}" placeholder="Book title" />
+            </div>
+            <div class="grow">
+              <label>Author</label>
+              <input id="mAuthor" type="text" value="${escapeHtml(book?.author || "")}" placeholder="Author name" />
+            </div>
+          </div>
+          <div class="row" style="margin-top:0.75rem">
+            <div class="grow">
+              <label>Price</label>
+              <input id="mPrice" type="text" value="${escapeHtml(book?.price ?? "")}" placeholder="0.00" />
+            </div>
+            <div class="grow">
+              <label>Status</label>
+              <input type="text" value="${book?.isLoaned ? "Loaned" : "Available"}" disabled />
+              <p class="hint">Status is managed by Loans.</p>
+            </div>
+          </div>
+          ${isEdit ? `<p class="hint">Book ID: <span class="mono">${escapeHtml(book._id)}</span></p>` : ``}
+        `,
+        [
+          { label: "Cancel", kind: "ghost", onClick: closeModal },
+          {
+            label: isEdit ? "Save changes" : "Create book",
+            kind: "primary",
+            onClick: async () => {
+              const payload = {
+                title: $("mTitle").value.trim(),
+                author: $("mAuthor").value.trim(),
+                price: Number($("mPrice").value.trim() || "0"),
+              };
+              try {
+                if (isEdit) {
+                  await api(`/api/v1/books/${book._id}`, { method: "PUT", body: JSON.stringify(payload) });
+                  toast("Book updated", "Changes saved successfully.");
+                } else {
+                  await api(`/api/v1/books`, { method: "POST", body: JSON.stringify(payload) });
+                  toast("Book created", "New book added successfully.");
+                }
+                closeModal();
+                await loadBooks();
+                renderBooks();
+              } catch (e) {
+                toast("Error", e.message);
+              }
+            }
+          }
+        ]
+      );
+    }
+
+    function openLoanModal() {
+      const userOptions = state.users.map((u) => `<option value="${escapeHtml(u._id)}">${escapeHtml(u.username)} (${escapeHtml(u._id)})</option>`).join("");
+      const bookOptions = state.books
+        .map((b) => `<option value="${escapeHtml(b._id)}" ${b.isLoaned ? "disabled" : ""}>${escapeHtml(b.title)}${b.isLoaned ? " — LOANED" : ""} (${escapeHtml(b._id)})</option>`)
+        .join("");
+
+      openModal(
+        "New loan",
+        `
+          <div class="row">
+            <div class="grow">
+              <label>User</label>
+              <select id="mLoanUser">${userOptions}</select>
+            </div>
+            <div class="grow">
+              <label>Book (only available enabled)</label>
+              <select id="mLoanBook">${bookOptions}</select>
+            </div>
+          </div>
+          <div class="row" style="margin-top:0.75rem">
+            <div class="grow">
+              <label>Days</label>
+              <input id="mLoanDays" type="text" value="14" />
+              <p class="hint">Days must be at least 1.</p>
+            </div>
+            <div class="grow">
+              <label>Created</label>
+              <input type="text" value="${escapeHtml(nowIsoShort())}" disabled />
+            </div>
+          </div>
+        `,
+        [
+          { label: "Cancel", kind: "ghost", onClick: closeModal },
+          {
+            label: "Create loan",
+            kind: "primary",
+            onClick: async () => {
+              const payload = {
+                days: Number($("mLoanDays").value.trim()),
+                user: $("mLoanUser").value,
+                book: $("mLoanBook").value,
+              };
+              try {
+                await api(`/api/v1/loans`, { method: "POST", body: JSON.stringify(payload) });
+                toast("Loan created", "Book marked as loaned.");
+                closeModal();
+                await refreshAll();
+                showPage("loans");
+              } catch (e) {
+                toast("Error", e.message);
+              }
+            }
+          }
+        ]
+      );
+    }
+
+    function openReturnModal(userId) {
+      openModal(
+        "Return book",
+        `
+          <p class="hint">This API expects: <span class="mono">PUT /api/v1/loans/return/:id</span> and body <span class="mono">{ user }</span>.</p>
+          <div class="row" style="margin-top:0.75rem">
+            <div class="grow">
+              <label>User ID</label>
+              <input id="mReturnUser" type="text" value="${escapeHtml(userId || "")}" placeholder="User ObjectId" />
+            </div>
+            <div class="grow">
+              <label>URL :id (any valid ObjectId)</label>
+              <input id="mReturnAnyId" type="text" value="${escapeHtml(userId || "")}" placeholder="Any valid ObjectId" />
+              <p class="hint">Your backend validates <span class="mono">:id</span> even though it doesn't use it.</p>
+            </div>
+          </div>
+        `,
+        [
+          { label: "Cancel", kind: "ghost", onClick: closeModal },
+          {
+            label: "Return",
+            kind: "primary",
+            onClick: async () => {
+              const u = $("mReturnUser").value.trim();
+              const anyId = $("mReturnAnyId").value.trim();
+              if (!u || !anyId) {
+                toast("Missing data", "Fill user id and :id");
+                return;
+              }
+              try {
+                await api(`/api/v1/loans/return/${encodeURIComponent(anyId)}`, { method: "PUT", body: JSON.stringify({ user: u }) });
+                toast("Returned", "Book marked as available.");
+                closeModal();
+                await refreshAll();
+                showPage("loans");
+              } catch (e) {
+                toast("Error", e.message);
+              }
+            }
+          }
+        ]
+      );
+    }
+
+    async function refreshAll() {
+      document.body.classList.add("is-busy");
+      $("btnRefreshAll") && ($("btnRefreshAll").disabled = true);
+      try {
+        await Promise.all([loadUsers(), loadBooks(), loadLoans()]);
+        if (state.page === "users") renderUsers();
+        if (state.page === "books") renderBooks();
+        if (state.page === "loans") renderLoans();
+      } catch (e) {
+        toast("Load failed", e.message);
+      } finally {
+        document.body.classList.remove("is-busy");
+        if ($("btnRefreshAll")) $("btnRefreshAll").disabled = false;
+      }
+    }
+
+    function wireEvents() {
+      document.querySelectorAll(".tab").forEach((b) => b.addEventListener("click", () => showPage(b.dataset.page)));
+      document.querySelectorAll(".dash-tile[data-jump]").forEach((tile) => {
+        tile.addEventListener("click", () => showPage(tile.dataset.jump));
+      });
+      document.body.addEventListener("click", (e) => {
+        const copyBtn = e.target.closest("[data-copy]");
+        if (!copyBtn) return;
+        const text = copyBtn.getAttribute("data-copy");
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(() => toast("Copied", "ID is on the clipboard.")).catch(() => toast("Copy failed", "Your browser blocked clipboard access."));
+      });
+      $("btnModalClose").addEventListener("click", closeModal);
+      $("modalBackdrop").addEventListener("click", (e) => { if (e.target === $("modalBackdrop")) closeModal(); });
+      window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+      $("baseUrl").addEventListener("input", () => {
+        state.baseUrl = normalizeBaseUrl($("baseUrl").value);
+        localStorage.setItem(STORAGE_KEY, state.baseUrl);
+        setOriginHint();
+      });
+
+      $("btnPing").addEventListener("click", pingHealth);
+      $("btnRefreshAll").addEventListener("click", refreshAll);
+
+      $("btnUsersReload").addEventListener("click", async () => { await loadUsers(); renderUsers(); });
+      $("btnBooksReload").addEventListener("click", async () => { await loadBooks(); renderBooks(); });
+      $("btnLoansReload").addEventListener("click", async () => { await loadLoans(); renderLoans(); });
+
+      $("btnUsersNew").addEventListener("click", () => openUserModal("new"));
+      $("btnBooksNew").addEventListener("click", () => openBookModal("new"));
+      $("btnLoansNew").addEventListener("click", () => openLoanModal());
+
+      $("usersSearch").addEventListener("input", renderUsers);
+      $("booksSearch").addEventListener("input", renderBooks);
+      $("loansSearch").addEventListener("input", renderLoans);
+
+      document.body.addEventListener("click", async (e) => {
+        const btn = e.target.closest("button[data-action]");
+        if (!btn) return;
+        const action = btn.dataset.action;
+        const id = btn.dataset.id;
+
+        try {
+          if (action === "user-profile") {
+            openUserProfile(id);
+            return;
+          }
+          if (action === "edit-user") {
+            const u = state.users.find((x) => x._id === id);
+            openUserModal("edit", u);
+          }
+          if (action === "delete-user") {
+            if (!confirm("Delete this user?")) return;
+            await api(`/api/v1/users/${id}`, { method: "DELETE" });
+            toast("User deleted", "Removed successfully.");
+            await loadUsers();
+            renderUsers();
+          }
+          if (action === "book-profile") {
+            openBookProfile(id);
+            return;
+          }
+          if (action === "edit-book") {
+            const b = state.books.find((x) => x._id === id);
+            openBookModal("edit", b);
+          }
+          if (action === "delete-book") {
+            if (!confirm("Delete this book?")) return;
+            await api(`/api/v1/books/${id}`, { method: "DELETE" });
+            toast("Book deleted", "Removed successfully.");
+            await loadBooks();
+            renderBooks();
+          }
+        } catch (err) {
+          toast("Error", err.message);
+        }
+      });
+
+      document.body.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-userid]");
+        if (!btn) return;
+        if (btn.dataset.action === "return-loan") {
+          openReturnModal(btn.dataset.userid);
+        }
+      });
+    }
+
+    async function init() {
+      if (isFileProtocol()) {
+        const banner = $("fileProtocolBanner");
+        if (banner) banner.hidden = false;
+      }
+      const saved = localStorage.getItem(STORAGE_KEY);
+      const initial = normalizeBaseUrl(saved || defaultApiBase());
+      $("baseUrl").value = initial;
+      state.baseUrl = normalizeBaseUrl(initial);
+      setOriginHint();
+      wireEvents();
+
+      setHealth(false, "Not checked");
+      updatePageChrome("dashboard");
+      try {
+        await refreshAll();
+      } catch (_) {}
+    }
+
+    init();
+  </script>
+</body>
+</html>

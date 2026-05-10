@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Library API Console</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --surface: #121a2b;
+      --surface-2: #1a2438;
+      --border: #2a3652;
+      --text: #e8edf7;
+      --muted: #8b9bb4;
+      --accent: #5b9cf5;
+      --accent-dim: rgba(91, 156, 245, 0.15);
+      --get: #3b82f6;
+      --post: #22c55e;
+      --put: #eab308;
+      --delete: #ef4444;
+      --radius: 12px;
+      --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+      --mono: "Cascadia Code", "Fira Code", ui-monospace, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font);
+      background: radial-gradient(1200px 600px at 10% -10%, rgba(91, 156, 245, 0.12), transparent),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr 420px;
+      min-height: 100vh;
+    }
+
+    @media (max-width: 1200px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      .response-panel {
+        border-left: none;
+        border-top: 1px solid var(--border);
+        max-height: 50vh;
+      }
+    }
+
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 1.25rem;
+      position: sticky;
+      top: 0;
+      align-self: start;
+      max-height: 100vh;
+      overflow-y: auto;
+    }
+
+    .brand {
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+
+    .brand-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+
+    input[type="text"],
+    input[type="url"],
+    textarea {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 0.55rem 0.65rem;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .nav {
+      margin-top: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      padding: 0.45rem 0.6rem;
+      border-radius: 8px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .nav a:hover {
+      background: var(--surface-2);
+      color: var(--text);
+    }
+
+    .main {
+      padding: 1.5rem 1.75rem 3rem;
+      overflow-y: auto;
+    }
+
+    .section {
+      margin-bottom: 2.5rem;
+      scroll-margin-top: 1rem;
+    }
+
+    .section h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin: 0 0 0.35rem;
+      letter-spacing: -0.02em;
+    }
+
+    .section p.hint {
+      margin: 0 0 1rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+    }
+
+    .card-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 0.75rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .method {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      color: #fff;
+    }
+
+    .method.get { background: var(--get); }
+    .method.post { background: var(--post); }
+    .method.put { background: var(--put); color: #1a1a1a; }
+    .method.delete { background: var(--delete); }
+
+    .path {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--accent);
+      word-break: break-all;
+    }
+
+    .desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .field-row {
+      margin-bottom: 0.65rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    button {
+      font-family: var(--font);
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: filter 0.15s, transform 0.1s;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button.primary {
+      background: linear-gradient(180deg, #6aa8ff, var(--accent));
+      color: #0b1220;
+    }
+
+    button.primary:hover {
+      filter: brightness(1.06);
+    }
+
+    button.ghost {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    button.ghost:hover {
+      border-color: var(--muted);
+    }
+
+    .response-panel {
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      position: sticky;
+      top: 0;
+      align-self: start;
+      max-height: 100vh;
+    }
+
+    .response-panel h3 {
+      margin: 0 0 0.75rem;
+      font-size: 0.95rem;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    .pill {
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .pill.ok { color: #4ade80; border-color: rgba(74, 222, 128, 0.35); }
+    .pill.err { color: #f87171; border-color: rgba(248, 113, 113, 0.35); }
+
+    pre {
+      margin: 0;
+      flex: 1;
+      overflow: auto;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: #cbd5e1;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .empty-state {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 1.25rem;
+      right: 1.25rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 0.65rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 50;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">Library API</div>
+      <div class="brand-sub">REST console · no auth</div>
+      <label for="baseUrl">API base URL</label>
+      <input type="url" id="baseUrl" placeholder="http://localhost:3000" autocomplete="off" />
+      <nav class="nav" id="nav"></nav>
+    </aside>
+
+    <main class="main" id="main"></main>
+
+    <aside class="response-panel">
+      <h3>Response</h3>
+      <div class="meta" id="responseMeta"></div>
+      <div class="actions" id="responseActions" style="margin-bottom:0.5rem"></div>
+      <pre id="responseBody" class="empty-state">Send a request to see JSON here.</pre>
+    </aside>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const STORAGE_KEY = "library-api-base-url";
+
+    const endpoints = [
+      {
+        id: "health",
+        title: "Health",
+        hint: "Quick readiness check.",
+        items: [
+          {
+            method: "GET",
+            path: "/api/health",
+            desc: "Returns API status message.",
+            body: null,
+            pathParams: [],
+          },
+        ],
+      },
+      {
+        id: "users",
+        title: "Users",
+        hint: "Fields: username, email, age (min 15), phone (unique).",
+        items: [
+          {
+            method: "GET",
+            path: "/api/v1/users",
+            desc: "List all users.",
+            body: null,
+            pathParams: [],
+          },
+          {
+            method: "GET",
+            path: "/api/v1/users/:id",
+            desc: "Get one user by MongoDB id.",
+            body: null,
+            pathParams: [{ key: "id", label: "User ID" }],
+          },
+          {
+            method: "POST",
+            path: "/api/v1/users",
+            desc: "Create a user.",
+            body: JSON.stringify(
+              {
+                username: "jane_reader",
+                email: "jane@example.com",
+                age: 22,
+                phone: "+971501234567",
+              },
+              null,
+              2
+            ),
+            pathParams: [],
+          },
+          {
+            method: "PUT",
+            path: "/api/v1/users/:id",
+            desc: "Update user (partial fields supported by server).",
+            body: JSON.stringify(
+              { username: "jane_reader_updated", email: "jane.new@example.com" },
+              null,
+              2
+            ),
+            pathParams: [{ key: "id", label: "User ID" }],
+          },
+          {
+            method: "DELETE",
+            path: "/api/v1/users/:id",
+            desc: "Delete a user.",
+            body: null,
+            pathParams: [{ key: "id", label: "User ID" }],
+          },
+        ],
+      },
+      {
+        id: "books",
+        title: "Books",
+        hint: "Fields: title, author, price. isLoaned is managed by loans.",
+        items: [
+          {
+            method: "GET",
+            path: "/api/v1/books",
+            desc: "List all books.",
+            body: null,
+            pathParams: [],
+          },
+          {
+            method: "GET",
+            path: "/api/v1/books/:id",
+            desc: "Get one book.",
+            body: null,
+            pathParams: [{ key: "id", label: "Book ID" }],
+          },
+          {
+            method: "POST",
+            path: "/api/v1/books",
+            desc: "Create a book.",
+            body: JSON.stringify(
+              { title: "Clean Code", author: "Robert C. Martin", price: 49.99 },
+              null,
+              2
+            ),
+            pathParams: [],
+          },
+          {
+            method: "PUT",
+            path: "/api/v1/books/:id",
+            desc: "Update a book.",
+            body: JSON.stringify({ title: "Clean Code (2nd impression)", price: 54.5 }, null, 2),
+            pathParams: [{ key: "id", label: "Book ID" }],
+          },
+          {
+            method: "DELETE",
+            path: "/api/v1/books/:id",
+            desc: "Delete a book.",
+            body: null,
+            pathParams: [{ key: "id", label: "Book ID" }],
+          },
+        ],
+      },
+      {
+        id: "loans",
+        title: "Loans",
+        hint: "Create loan: days, user id, book id. Return uses PUT with user in body; path id must be a valid ObjectId.",
+        items: [
+          {
+            method: "GET",
+            path: "/api/v1/loans",
+            desc: "List loans (user and book populated).",
+            body: null,
+            pathParams: [],
+          },
+          {
+            method: "GET",
+            path: "/api/v1/loans/:id",
+            desc: "Get one loan.",
+            body: null,
+            pathParams: [{ key: "id", label: "Loan ID" }],
+          },
+          {
+            method: "POST",
+            path: "/api/v1/loans",
+            desc: "Borrow a book for a user (sets book.isLoaned).",
+            body: JSON.stringify(
+              {
+                days: 14,
+                user: "REPLACE_WITH_USER_OBJECT_ID",
+                book: "REPLACE_WITH_BOOK_OBJECT_ID",
+              },
+              null,
+              2
+            ),
+            pathParams: [],
+          },
+          {
+            method: "PUT",
+            path: "/api/v1/loans/return/:id",
+            desc: "Return the active loan for a user (body.user required; URL :id must be valid ObjectId per API).",
+            body: JSON.stringify({ user: "REPLACE_WITH_USER_OBJECT_ID" }, null, 2),
+            pathParams: [{ key: "id", label: "Any valid ObjectId (route validation)" }],
+          },
+        ],
+      },
+    ];
+
+    const baseUrlInput = document.getElementById("baseUrl");
+    const navEl = document.getElementById("nav");
+    const mainEl = document.getElementById("main");
+    const responseMeta = document.getElementById("responseMeta");
+    const responseActions = document.getElementById("responseActions");
+    const responseBody = document.getElementById("responseBody");
+    const toastEl = document.getElementById("toast");
+
+    function getBaseUrl() {
+      let u = (baseUrlInput.value || "").trim();
+      if (!u) u = "http://localhost:3000";
+      return u.replace(/\/$/, "");
+    }
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toastEl.classList.remove("show"), 2200);
+    }
+
+    function buildUrl(pathTemplate, paramValues) {
+      let p = pathTemplate;
+      for (const [key, val] of Object.entries(paramValues)) {
+        p = p.replace(":" + key, encodeURIComponent(val));
+      }
+      return getBaseUrl() + p;
+    }
+
+    function renderNav() {
+      navEl.innerHTML = endpoints
+        .map(
+          (s) =>
+            `<a href="#${s.id}">${s.title}</a>`
+        )
+        .join("");
+    }
+
+    function renderMain() {
+      mainEl.innerHTML = endpoints
+        .map((section) => {
+          const cards = section.items
+            .map((item, idx) => {
+              const cardId = `${section.id}-${idx}`;
+              const paramFields =
+                item.pathParams.length === 0
+                  ? ""
+                  : item.pathParams
+                      .map(
+                        (pp) => `
+                <div class="field-row">
+                  <label for="${cardId}-${pp.key}">${pp.label}</label>
+                  <input type="text" id="${cardId}-${pp.key}" data-param="${pp.key}" placeholder="MongoDB ObjectId" />
+                </div>`
+                      )
+                      .join("");
+
+              const bodyBlock =
+                item.body == null
+                  ? ""
+                  : `
+              <div class="field-row">
+                <label for="${cardId}-body">JSON body</label>
+                <textarea id="${cardId}-body" class="js-body">${escapeHtml(item.body)}</textarea>
+              </div>`;
+
+              return `
+            <div class="card" data-card="${cardId}">
+              <div class="card-head">
+                <span class="method ${item.method.toLowerCase()}">${item.method}</span>
+                <span class="path">${escapeHtml(item.path)}</span>
+              </div>
+              <div class="desc">${escapeHtml(item.desc)}</div>
+              ${paramFields}
+              ${bodyBlock}
+              <div class="actions">
+                <button type="button" class="primary js-send" data-method="${item.method}" data-path="${escapeAttr(item.path)}">Send request</button>
+                <button type="button" class="ghost js-copy-sample" ${item.body == null ? "hidden" : ""}>Reset body sample</button>
+              </div>
+            </div>`;
+            })
+            .join("");
+
+          return `
+        <section class="section" id="${section.id}">
+          <h2>${escapeHtml(section.title)}</h2>
+          <p class="hint">${escapeHtml(section.hint)}</p>
+          <div class="cards">${cards}</div>
+        </section>`;
+        })
+        .join("");
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function escapeAttr(s) {
+      return escapeHtml(s).replace(/'/g, "&#39;");
+    }
+
+    function collectParams(card) {
+      const inputs = card.querySelectorAll("input[data-param]");
+      const o = {};
+      inputs.forEach((inp) => {
+        o[inp.dataset.param] = inp.value.trim();
+      });
+      return o;
+    }
+
+    async function sendRequest(method, pathTemplate, card) {
+      const params = collectParams(card);
+      for (const key of Object.keys(params)) {
+        if (pathTemplate.includes(":" + key) && !params[key]) {
+          showToast(`Fill in: ${key}`);
+          return;
+        }
+      }
+
+      const url = buildUrl(pathTemplate, params);
+      const bodyTa = card.querySelector("textarea.js-body");
+      let body = undefined;
+      let headers = {};
+
+      if (bodyTa && ["POST", "PUT", "PATCH"].includes(method)) {
+        const raw = bodyTa.value.trim();
+        if (raw) {
+          try {
+            body = JSON.stringify(JSON.parse(raw));
+            headers["Content-Type"] = "application/json";
+          } catch (e) {
+            showToast("Invalid JSON in body");
+            return;
+          }
+        }
+      }
+
+      const started = performance.now();
+      responseMeta.innerHTML = `<span class="pill">Sending…</span>`;
+      responseActions.innerHTML = "";
+      responseBody.textContent = "";
+      responseBody.classList.remove("empty-state");
+
+      try {
+        const res = await fetch(url, { method, headers, body });
+        const elapsed = Math.round(performance.now() - started);
+        const text = await res.text();
+        let pretty = text;
+        try {
+          pretty = JSON.stringify(JSON.parse(text), null, 2);
+        } catch (_) {}
+
+        const statusClass = res.ok ? "ok" : "err";
+        responseMeta.innerHTML = `
+          <span class="pill ${statusClass}">${res.status} ${res.statusText || ""}</span>
+          <span class="pill">${elapsed} ms</span>
+          <span class="pill">${method} ${pathTemplate}</span>
+        `;
+        responseBody.textContent = pretty || "(empty body)";
+
+        const copyBtn = document.createElement("button");
+        copyBtn.type = "button";
+        copyBtn.className = "ghost";
+        copyBtn.textContent = "Copy response";
+        copyBtn.onclick = () => {
+          navigator.clipboard.writeText(pretty).then(() => showToast("Copied"));
+        };
+        responseActions.appendChild(copyBtn);
+      } catch (err) {
+        responseMeta.innerHTML = `<span class="pill err">Network error</span>`;
+        responseBody.textContent = String(err.message || err);
+        responseBody.classList.add("empty-state");
+      }
+    }
+
+    function init() {
+      baseUrlInput.value = localStorage.getItem(STORAGE_KEY) || "http://localhost:3000";
+      const saveBase = () => localStorage.setItem(STORAGE_KEY, getBaseUrl());
+      baseUrlInput.addEventListener("change", saveBase);
+      baseUrlInput.addEventListener("input", saveBase);
+
+      renderNav();
+      renderMain();
+
+      mainEl.addEventListener("click", (e) => {
+        const send = e.target.closest(".js-send");
+        if (send) {
+          const card = send.closest(".card");
+          sendRequest(send.dataset.method, send.dataset.path, card);
+          return;
+        }
+        const reset = e.target.closest(".js-copy-sample");
+        if (reset) {
+          const card = reset.closest(".card");
+          const ta = card.querySelector("textarea.js-body");
+          const sample = card.querySelector(".js-send").dataset.path;
+          const sectionCard = endpoints.flatMap((s) => s.items.map((i) => ({ ...i, section: s.id })));
+          const found = sectionCard.find((i) => i.path === sample);
+          if (found && found.body) ta.value = found.body;
+          showToast("Body reset to sample");
+        }
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>
