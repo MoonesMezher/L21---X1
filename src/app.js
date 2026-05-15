@@ -16,6 +16,7 @@ app.use(express.static(path.join(__dirname, "..", "public")));
 
 app.get("/api/health", (req, res) => res.status(200).json({ message: "API is healthy" }));
 
+app.use("/api/v1/auth", require("./routes/auth.route"));
 app.use("/api/v1/users", require("./routes/users.route"));
 app.use("/api/v1/books", require("./routes/books.route"));
 app.use("/api/v1/loans", require("./routes/loans.route"));

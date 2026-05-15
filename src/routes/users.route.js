@@ -9,10 +9,10 @@ router.get("/", asyncHandler(usersController.getAll))
 
 router.get("/:id", [id], asyncHandler(usersController.getOne))
 
-router.post("/", asyncHandler(usersController.add))
+// router.post("/", asyncHandler(usersController.add))
 
-router.put("/:id", [id], asyncHandler(usersController.update))
+// router.put("/:id", [id], asyncHandler(usersController.update))
 
-router.delete("/:id", [id], asyncHandler(usersController.remove))
+// router.delete("/:id", [id], asyncHandler(usersController.remove))
 
 module.exports = router;
