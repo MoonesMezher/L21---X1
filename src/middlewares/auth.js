@@ -1,5 +1,6 @@
+const User = require('../models/User');
 const jwtService = require('../utils/jwtService');
-const auth = (req, res, next) => {
+const auth = async (req, res, next) => {
     try {
         const { authorization } = req.headers; // Bearer <token>
     
@@ -13,7 +14,14 @@ const auth = (req, res, next) => {
 
         const decoded = jwtService.verifyToken(token);
 
-        // console.log(decoded);
+        /* const user = await User.findById(decoded.userId)
+
+        if(user.block) {
+            return res.status(401).json("This user is blocked")
+        }
+
+        req._user = { ...user } */
+        req._user = { ...decoded }
         
         next();
     } catch (error) {

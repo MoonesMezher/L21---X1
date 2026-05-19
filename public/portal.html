@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LibraDesk — Library Operations Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #1d4ed8;
+      --primary-hover: #1e40af;
+      --primary-soft: #eff6ff;
+      --success: #059669;
+      --success-soft: #ecfdf5;
+      --warn: #d97706;
+      --warn-soft: #fffbeb;
+      --danger: #dc2626;
+      --danger-soft: #fef2f2;
+      --sidebar: #0f172a;
+      --sidebar-text: #94a3b8;
+      --sidebar-active: #ffffff;
+      --shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 12px 32px rgba(15, 23, 42, 0.08);
+      --radius: 12px;
+      --font: "Inter", system-ui, sans-serif;
+      --mono: "JetBrains Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.5;
+    }
+
+    /* —— Auth shell —— */
+    .auth-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    @media (max-width: 900px) {
+      .auth-shell { grid-template-columns: 1fr; }
+      .auth-hero { display: none; }
+    }
+    .auth-hero {
+      background: linear-gradient(145deg, #0f172a 0%, #1e3a8a 55%, #312e81 100%);
+      color: #fff;
+      padding: 3rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .auth-hero h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.03em; margin: 0 0 0.75rem; }
+    .auth-hero p { color: rgba(255,255,255,0.75); max-width: 36ch; margin: 0; font-size: 1.05rem; }
+    .auth-hero ul { margin: 2rem 0 0; padding: 0; list-style: none; }
+    .auth-hero li { padding: 0.5rem 0; color: rgba(255,255,255,0.85); display: flex; gap: 0.6rem; align-items: center; }
+    .auth-panel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .auth-card {
+      width: min(420px, 100%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: var(--shadow);
+    }
+    .auth-card h2 { margin: 0 0 0.25rem; font-size: 1.35rem; letter-spacing: -0.02em; }
+    .auth-card .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .auth-tabs { display: flex; gap: 0.35rem; margin-bottom: 1.25rem; background: var(--surface-2); padding: 0.25rem; border-radius: 10px; }
+    .auth-tabs button {
+      flex: 1; border: none; background: transparent; padding: 0.5rem;
+      font-family: inherit; font-weight: 600; font-size: 0.875rem;
+      color: var(--muted); border-radius: 8px; cursor: pointer;
+    }
+    .auth-tabs button.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+
+    /* —— App shell —— */
+    .app { display: none; min-height: 100vh; }
+    .app.show { display: flex; }
+    .sidebar {
+      width: 260px;
+      background: var(--sidebar);
+      color: var(--sidebar-text);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .sidebar-brand {
+      padding: 1.25rem 1.15rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .sidebar-brand strong { color: #fff; font-size: 1.05rem; display: block; letter-spacing: -0.02em; }
+    .sidebar-brand span { font-size: 0.75rem; opacity: 0.7; }
+    .sidebar-nav { flex: 1; padding: 0.75rem; overflow-y: auto; }
+    .nav-label {
+      font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em;
+      padding: 0.75rem 0.65rem 0.35rem; opacity: 0.55;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 0.6rem;
+      width: 100%; border: none; background: transparent;
+      color: var(--sidebar-text); padding: 0.55rem 0.65rem;
+      border-radius: 8px; font-family: inherit; font-size: 0.9rem;
+      font-weight: 500; cursor: pointer; text-align: left;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.06); color: #e2e8f0; }
+    .nav-item.active { background: rgba(255,255,255,0.12); color: var(--sidebar-active); }
+    .nav-item .ico { width: 1.25rem; text-align: center; opacity: 0.9; }
+    .sidebar-foot {
+      padding: 1rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .main-wrap { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.85rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    }
+    .topbar h1 { margin: 0; font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em; }
+    .topbar p { margin: 0.15rem 0 0; font-size: 0.85rem; color: var(--muted); }
+    .user-menu { display: flex; align-items: center; gap: 0.75rem; }
+    .role-badge {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; padding: 0.25rem 0.55rem; border-radius: 6px;
+    }
+    .role-badge.admin { background: #fef3c7; color: #92400e; }
+    .role-badge.data-entry { background: #dbeafe; color: #1e40af; }
+    .role-badge.user { background: #f1f5f9; color: #475569; }
+
+    .content { flex: 1; padding: 1.5rem; overflow: auto; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card-head {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; flex-wrap: wrap;
+    }
+    .card-head h3 { margin: 0; font-size: 1rem; font-weight: 700; }
+    .card-head p { margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--muted); }
+    .card-body { padding: 1.25rem; }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.2rem;
+      box-shadow: var(--shadow);
+    }
+    .stat-card .label { font-size: 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-card .value { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; margin-top: 0.25rem; }
+
+    label {
+      display: block; font-size: 0.8rem; font-weight: 600; color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+    input, select, textarea {
+      width: 100%; padding: 0.6rem 0.75rem;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-family: inherit; font-size: 0.9375rem; color: var(--text);
+      background: var(--surface); outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+    .field { margin-bottom: 1rem; }
+    .row { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .row .field { flex: 1; min-width: 200px; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+      padding: 0.55rem 1rem; border-radius: 8px; font-family: inherit;
+      font-size: 0.875rem; font-weight: 600; cursor: pointer;
+      border: 1px solid transparent; transition: background 0.15s, transform 0.05s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+    .btn-secondary { background: var(--surface); border-color: var(--border); color: var(--text); }
+    .btn-secondary:hover:not(:disabled) { background: var(--surface-2); }
+    .btn-danger { background: var(--danger-soft); border-color: #fecaca; color: var(--danger); }
+    .btn-sm { padding: 0.38rem 0.7rem; font-size: 0.8125rem; }
+
+    .table-wrap { overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th {
+      background: var(--surface-2); font-size: 0.7rem; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--muted); font-weight: 700;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--primary-soft); }
+    .mono { font-family: var(--mono); font-size: 0.8rem; }
+
+    .tag {
+      display: inline-flex; align-items: center; padding: 0.2rem 0.55rem;
+      border-radius: 999px; font-size: 0.75rem; font-weight: 600;
+    }
+    .tag.ok { background: var(--success-soft); color: var(--success); }
+    .tag.warn { background: var(--warn-soft); color: var(--warn); }
+
+    .toolbar { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+    .search-input { max-width: 280px; }
+
+    .empty { text-align: center; padding: 2.5rem 1rem; color: var(--muted); }
+    .empty strong { display: block; color: var(--text); margin-bottom: 0.35rem; }
+
+    .modal-bg {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45);
+      display: none; align-items: center; justify-content: center;
+      padding: 1rem; z-index: 100; backdrop-filter: blur(4px);
+    }
+    .modal-bg.show { display: flex; }
+    .modal {
+      background: var(--surface); border-radius: 14px;
+      width: min(560px, 100%); max-height: 90vh; overflow: hidden;
+      box-shadow: var(--shadow); display: flex; flex-direction: column;
+    }
+    .modal.wide { width: min(880px, 100%); }
+    .modal-head { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-head h4 { margin: 0; font-size: 1.05rem; }
+    .modal-body { padding: 1.25rem; overflow: auto; flex: 1; }
+    .modal-foot { padding: 1rem 1.25rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.5rem; }
+
+    .toast {
+      position: fixed; bottom: 1.25rem; right: 1.25rem;
+      background: var(--sidebar); color: #fff;
+      padding: 0.85rem 1.1rem; border-radius: 10px;
+      box-shadow: var(--shadow); z-index: 200;
+      opacity: 0; transform: translateY(8px); pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s; max-width: 360px;
+    }
+    .toast.show { opacity: 1; transform: none; }
+    .toast.err { background: var(--danger); }
+
+    .profile-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;
+    }
+    @media (max-width: 600px) { .profile-grid { grid-template-columns: 1fr; } }
+    .profile-item label { margin-bottom: 0.2rem; }
+    .profile-item .val { font-weight: 600; }
+
+    .hidden { display: none !important; }
+
+    .file-banner {
+      background: #fffbeb;
+      border-bottom: 1px solid #fcd34d;
+      color: #92400e;
+      padding: 0.65rem 1rem;
+      font-size: 0.875rem;
+      text-align: center;
+    }
+    .file-banner a { color: var(--primary); font-weight: 600; }
+    .api-url-row { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+  <div id="fileBanner" class="file-banner hidden">
+    You opened this file from disk (<code>file://</code>). Browsers cannot call the API that way.
+    Start the server and open <a id="fileBannerLink" href="http://localhost:3000/">http://localhost:3000/</a>
+  </div>
+
+  <!-- AUTH -->
+  <div id="authShell" class="auth-shell">
+    <div class="auth-hero">
+      <h1>LibraDesk</h1>
+      <p>Enterprise library operations — secure access, role-based workflows, and real-time catalog management.</p>
+      <ul>
+        <li>✓ JWT-secured API with Bearer tokens</li>
+        <li>✓ Admin, data-entry, and member roles</li>
+        <li>✓ Catalog, loans, and staff management</li>
+      </ul>
+    </div>
+    <div class="auth-panel">
+      <div class="auth-card">
+        <h2>Welcome back</h2>
+        <p class="sub">Sign in to your workspace or create a member account.</p>
+        <div class="auth-tabs">
+          <button type="button" class="active" data-auth-tab="login">Sign in</button>
+          <button type="button" data-auth-tab="register">Register</button>
+        </div>
+        <form id="loginForm">
+          <div class="field">
+            <label>Email</label>
+            <input type="email" id="loginEmail" required placeholder="you@company.com" />
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <input type="password" id="loginPassword" required placeholder="••••••••" />
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; margin-top:0.5rem">Sign in</button>
+        </form>
+        <form id="registerForm" class="hidden">
+          <div class="row">
+            <div class="field"><label>Username</label><input id="regUsername" required /></div>
+            <div class="field"><label>Age</label><input type="number" id="regAge" min="15" required /></div>
+          </div>
+          <div class="field"><label>Email</label><input type="email" id="regEmail" required /></div>
+          <div class="field"><label>Phone</label><input id="regPhone" /></div>
+          <div class="field"><label>Password</label><input type="password" id="regPassword" required minlength="6" /></div>
+          <button type="submit" class="btn btn-primary" style="width:100%">Create account</button>
+        </form>
+        <div class="api-url-row">
+          <label for="apiBaseInput">API server URL</label>
+          <input type="url" id="apiBaseInput" value="http://localhost:3000" placeholder="http://localhost:3000" autocomplete="off" />
+          <p class="sub" style="margin:0.4rem 0 0; font-size:0.8rem">
+            Use <strong>http://localhost:3000</strong> when the Node server is running (not <code>file://</code>).
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app" class="app">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <strong>LibraDesk</strong>
+        <span>Operations portal</span>
+      </div>
+      <nav class="sidebar-nav" id="sidebarNav"></nav>
+      <div class="sidebar-foot">
+        <button type="button" class="nav-item" id="btnLogout" style="color:#fca5a5">
+          <span class="ico">⎋</span> Sign out
+        </button>
+      </div>
+    </aside>
+
+    <div class="main-wrap">
+      <header class="topbar">
+        <div>
+          <h1 id="pageTitle">Dashboard</h1>
+          <p id="pageSubtitle">Overview</p>
+        </div>
+        <div class="user-menu">
+          <span class="role-badge" id="roleBadge">user</span>
+          <span id="userDisplay" style="font-weight:600; font-size:0.9rem">—</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <!-- Dashboard -->
+        <section id="page-dashboard" class="page active">
+          <div class="stats-row" id="dashStats"></div>
+          <div class="card">
+            <div class="card-head"><div><h3>Quick actions</h3><p id="dashHint">Based on your role.</p></div></div>
+            <div class="card-body" id="dashActions"></div>
+          </div>
+        </section>
+
+        <!-- Admin: Users -->
+        <section id="page-users" class="page">
+          <div class="card">
+            <div class="card-head">
+              <div><h3>All members</h3><p>Admin-only · includes staff and readers</p></div>
+              <button type="button" class="btn btn-secondary btn-sm" id="btnReloadUsers">Refresh</button>
+            </div>
+            <div class="card-body">
+              <div class="toolbar">
+                <input type="search" class="search-input" id="usersSearch" placeholder="Search users…" />
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Phone</th><th>Actions</th></tr></thead>
+                  <tbody id="usersTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Admin: Create data-entry -->
+        <section id="page-staff" class="page">
+          <div class="card" style="max-width:520px">
+            <div class="card-head"><div><h3>Add data-entry staff</h3><p>Creates a user with role <strong>data-entry</strong></p></div></div>
+            <div class="card-body">
+              <form id="staffForm">
+                <div class="row">
+                  <div class="field"><label>Username</label><input name="username" required /></div>
+                  <div class="field"><label>Age</label><input name="age" type="number" min="15" required /></div>
+                </div>
+                <div class="field"><label>Email</label><input name="email" type="email" required /></div>
+                <div class="field"><label>Phone</label><input name="phone" /></div>
+                <div class="field"><label>Password</label><input name="password" type="password" required minlength="6" /></div>
+                <button type="submit" class="btn btn-primary">Create staff account</button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Books -->
+        <section id="page-books" class="page">
+          <div class="card">
+            <div class="card-head">
+              <div><h3>Book catalog</h3><p id="booksPageDesc">Manage titles in the library</p></div>
+              <div class="toolbar" style="margin:0">
+                <button type="button" class="btn btn-secondary btn-sm" id="btnReloadBooks">Refresh</button>
+                <button type="button" class="btn btn-primary btn-sm hidden" id="btnNewBook">+ Add book</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <input type="search" class="search-input" id="booksSearch" placeholder="Search title or author…" style="margin-bottom:1rem" />
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Title</th><th>Author</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
+                  <tbody id="booksTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Loans -->
+        <section id="page-loans" class="page">
+          <div class="card">
+            <div class="card-head">
+              <div><h3>Loans</h3><p id="loansPageDesc">Checkout and returns</p></div>
+              <div>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnReloadLoans">Refresh</button>
+                <button type="button" class="btn btn-primary btn-sm hidden" id="btnNewLoan">+ New loan</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Borrower</th><th>Book</th><th>Days</th><th>Date</th><th>Actions</th></tr></thead>
+                  <tbody id="loansTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Account -->
+        <section id="page-account" class="page">
+          <div class="card" style="max-width:640px">
+            <div class="card-head">
+              <div><h3>My account</h3><p>Profile from <span class="mono">GET /auth/profile</span></p></div>
+              <button type="button" class="btn btn-secondary btn-sm" id="btnReloadProfile">Refresh</button>
+            </div>
+            <div class="card-body" id="accountBody">
+              <p class="empty">Loading profile…</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="modalBg">
+    <div class="modal" id="modal">
+      <div class="modal-head">
+        <h4 id="modalTitle">Details</h4>
+        <button type="button" class="btn btn-secondary btn-sm" id="modalClose">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-foot" id="modalFoot"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORAGE = { token: "libra_token", role: "libra_role", base: "libra_api_base" };
+
+    const NAV = {
+      admin: [
+        { section: "Main", items: [
+          { id: "dashboard", label: "Dashboard", icon: "◉" },
+          { id: "users", label: "Members", icon: "👥" },
+          { id: "staff", label: "Staff onboarding", icon: "🛡" },
+        ]},
+        { section: "Operations", items: [
+          { id: "books", label: "Catalog", icon: "📚" },
+          { id: "loans", label: "Loans", icon: "🪪" },
+        ]},
+        { section: "Account", items: [
+          { id: "account", label: "My profile", icon: "👤" },
+        ]},
+      ],
+      "data-entry": [
+        { section: "Main", items: [
+          { id: "dashboard", label: "Dashboard", icon: "◉" },
+        ]},
+        { section: "Operations", items: [
+          { id: "books", label: "Catalog", icon: "📚" },
+          { id: "loans", label: "Loans", icon: "🪪" },
+        ]},
+        { section: "Account", items: [
+          { id: "account", label: "My profile", icon: "👤" },
+        ]},
+      ],
+      user: [
+        { section: "Main", items: [
+          { id: "dashboard", label: "Dashboard", icon: "◉" },
+          { id: "books", label: "Browse catalog", icon: "📚" },
+          { id: "loans", label: "Loan activity", icon: "🪪" },
+        ]},
+        { section: "Account", items: [
+          { id: "account", label: "My profile", icon: "👤" },
+        ]},
+      ],
+    };
+
+    const PAGE_COPY = {
+      dashboard: { title: "Dashboard", sub: "Your workspace overview" },
+      users: { title: "Members", sub: "Directory of all accounts" },
+      staff: { title: "Staff onboarding", sub: "Create data-entry operators" },
+      books: { title: "Catalog", sub: "Books and availability" },
+      loans: { title: "Loans", sub: "Checkouts and returns" },
+      account: { title: "My account", sub: "Profile and session" },
+    };
+
+    const state = {
+      token: localStorage.getItem(STORAGE.token) || "",
+      role: localStorage.getItem(STORAGE.role) || "",
+      profile: null,
+      users: [],
+      books: [],
+      loans: [],
+      page: "dashboard",
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    const DEFAULT_API = "http://localhost:3000";
+
+    function isFileProtocol() {
+      return window.location.protocol === "file:";
+    }
+
+    function isBadOrigin(origin) {
+      if (!origin || origin === "null" || origin === "undefined") return true;
+      if (origin.startsWith("file:")) return true;
+      return false;
+    }
+
+    function resolveApiBase() {
+      const input = $("apiBaseInput");
+      const fromInput = input && input.value ? input.value.trim() : "";
+      const fromStorage = (localStorage.getItem(STORAGE.base) || "").trim();
+      const fromOrigin = window.location.origin;
+
+      let base = DEFAULT_API;
+      if (!isFileProtocol() && !isBadOrigin(fromOrigin)) {
+        base = fromOrigin;
+      }
+      if (fromStorage && !isBadOrigin(fromStorage) && !fromStorage.startsWith("file:")) {
+        base = fromStorage;
+      }
+      if (fromInput && !fromInput.startsWith("file:")) {
+        base = fromInput;
+      }
+      return base.replace(/\/+$/, "");
+    }
+
+    function baseUrl() {
+      return resolveApiBase();
+    }
+
+    function syncApiBaseUi() {
+      const base = resolveApiBase();
+      if ($("apiBaseInput")) $("apiBaseInput").value = base;
+      localStorage.setItem(STORAGE.base, base);
+    }
+
+    async function loadServerConfig() {
+      if (isFileProtocol()) return;
+      try {
+        const cfg = await fetch(resolveApiBase() + "/api/config").then((r) => r.json());
+        if (cfg && cfg.apiBase && !isBadOrigin(cfg.apiBase)) {
+          localStorage.setItem(STORAGE.base, cfg.apiBase.replace(/\/+$/, ""));
+          if ($("apiBaseInput")) $("apiBaseInput").value = cfg.apiBase.replace(/\/+$/, "");
+        }
+      } catch (_) {}
+    }
+
+    function esc(s) {
+      return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+
+    function toast(msg, err) {
+      const el = $("toast");
+      el.textContent = msg;
+      el.className = "toast show" + (err ? " err" : "");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => el.classList.remove("show"), 2800);
+    }
+
+    function authHeaders() {
+      const h = { "Content-Type": "application/json" };
+      if (state.token) h["Authorization"] = "Bearer " + state.token;
+      return h;
+    }
+
+    async function api(path, opts = {}) {
+      const res = await fetch(baseUrl() + path, {
+        ...opts,
+        headers: { ...authHeaders(), ...(opts.headers || {}) },
+      });
+      const text = await res.text();
+      let data = null;
+      try { data = text ? JSON.parse(text) : null; } catch (_) { data = text; }
+      if (!res.ok) {
+        const msg = (data && data.message) ? data.message : "Request failed";
+        const e = new Error(msg);
+        e.status = res.status;
+        if (res.status === 401 && state.token) {
+          logout(true);
+        }
+        throw e;
+      }
+      return data;
+    }
+
+    function canManageCatalog() {
+      return state.role === "admin" || state.role === "data-entry";
+    }
+
+    function canManageLoans() {
+      return state.role === "admin" || state.role === "data-entry";
+    }
+
+    function isAdmin() {
+      return state.role === "admin";
+    }
+
+    function showAuth() {
+      $("authShell").style.display = "";
+      $("app").classList.remove("show");
+    }
+
+    function showApp() {
+      $("authShell").style.display = "none";
+      $("app").classList.add("show");
+      renderSidebar();
+      applyRoleUi();
+      goPage("dashboard");
+    }
+
+    function logout(silent) {
+      state.token = "";
+      state.role = "";
+      state.profile = null;
+      localStorage.removeItem(STORAGE.token);
+      localStorage.removeItem(STORAGE.role);
+      showAuth();
+      if (!silent) toast("Signed out");
+    }
+
+    function renderSidebar() {
+      const nav = NAV[state.role] || NAV.user;
+      $("sidebarNav").innerHTML = nav.map((sec) => `
+        <div class="nav-label">${esc(sec.section)}</div>
+        ${sec.items.map((it) => `
+          <button type="button" class="nav-item" data-page="${it.id}">
+            <span class="ico">${it.icon}</span> ${esc(it.label)}
+          </button>
+        `).join("")}
+      `).join("");
+      $("sidebarNav").querySelectorAll(".nav-item").forEach((btn) => {
+        btn.addEventListener("click", () => goPage(btn.dataset.page));
+      });
+    }
+
+    function applyRoleUi() {
+      const badge = $("roleBadge");
+      badge.textContent = state.role || "user";
+      badge.className = "role-badge " + (state.role || "user").replace("data-entry", "data-entry");
+
+      $("btnNewBook").classList.toggle("hidden", !canManageCatalog());
+      $("btnNewLoan").classList.toggle("hidden", !canManageLoans());
+
+      const booksDesc = canManageCatalog()
+        ? "Add, edit, and remove catalog titles"
+        : "Read-only view of the library catalog";
+      $("booksPageDesc").textContent = booksDesc;
+
+      const loansDesc = canManageLoans()
+        ? "Process checkouts and returns"
+        : "View current and past loan activity";
+      $("loansPageDesc").textContent = loansDesc;
+    }
+
+    function goPage(id) {
+      state.page = id;
+      document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
+      const el = $("page-" + id);
+      if (el) el.classList.add("active");
+      document.querySelectorAll(".nav-item").forEach((n) => {
+        n.classList.toggle("active", n.dataset.page === id);
+      });
+      const copy = PAGE_COPY[id] || PAGE_COPY.dashboard;
+      $("pageTitle").textContent = copy.title;
+      $("pageSubtitle").textContent = copy.sub;
+
+      if (id === "dashboard") renderDashboard();
+      if (id === "users" && isAdmin()) loadUsers();
+      if (id === "books") loadBooks();
+      if (id === "loans") loadLoans();
+      if (id === "account") loadProfile();
+    }
+
+    function openModal(title, body, footHtml, wide) {
+      $("modalTitle").textContent = title;
+      $("modalBody").innerHTML = body;
+      $("modalFoot").innerHTML = footHtml || "";
+      $("modal").classList.toggle("wide", !!wide);
+      $("modalBg").classList.add("show");
+    }
+
+    function closeModal() {
+      $("modalBg").classList.remove("show");
+      $("modalBody").innerHTML = "";
+      $("modalFoot").innerHTML = "";
+    }
+
+    async function loadProfile() {
+      try {
+        const res = await api("/api/v1/auth/profile");
+        const u = res.data || res.user || res;
+        state.profile = u;
+        $("userDisplay").textContent = u.username || u.email || "User";
+        $("accountBody").innerHTML = `
+          <div class="profile-grid">
+            <div class="profile-item"><label>Username</label><div class="val">${esc(u.username)}</div></div>
+            <div class="profile-item"><label>Email</label><div class="val">${esc(u.email)}</div></div>
+            <div class="profile-item"><label>Role</label><div class="val"><span class="role-badge ${esc(u.role)}">${esc(u.role)}</span></div></div>
+            <div class="profile-item"><label>Age</label><div class="val">${esc(u.age)}</div></div>
+            <div class="profile-item"><label>Phone</label><div class="val">${esc(u.phone || "—")}</div></div>
+            <div class="profile-item"><label>Member since</label><div class="val mono">${esc((u.createdAt||"").slice(0,10))}</div></div>
+          </div>
+          <p style="margin-top:1rem; font-size:0.85rem; color:var(--muted)">Session uses <strong>Authorization: Bearer &lt;token&gt;</strong> on protected routes.</p>
+        `;
+      } catch (e) {
+        $("accountBody").innerHTML = `<p class="empty"><strong>Could not load profile</strong>${esc(e.message)}</p>`;
+      }
+    }
+
+    async function renderDashboard() {
+      const stats = $("dashStats");
+      const actions = $("dashActions");
+      let books = [], loans = [], users = [];
+
+      try {
+        [books, loans] = await Promise.all([
+          api("/api/v1/books"),
+          api("/api/v1/loans"),
+        ]);
+        state.books = books;
+        state.loans = loans;
+        if (isAdmin()) {
+          users = await api("/api/v1/users");
+          state.users = users;
+        }
+      } catch (_) {}
+
+      const out = books.filter((b) => b.isLoaned).length;
+      const statItems = [
+        { label: "Catalog titles", value: books.length },
+        { label: "Books on loan", value: out },
+        { label: "Loan records", value: loans.length },
+      ];
+      if (isAdmin()) statItems.push({ label: "Total members", value: users.length });
+
+      stats.innerHTML = statItems.map((s) => `
+        <div class="stat-card"><div class="label">${esc(s.label)}</div><div class="value">${s.value}</div></div>
+      `).join("");
+
+      const hints = {
+        admin: "You have full access: members, staff, catalog, and loans.",
+        "data-entry": "Manage catalog and loans. Contact an admin for member directory access.",
+        user: "Browse the catalog and view loan activity. Manage your profile under Account.",
+      };
+      $("dashHint").textContent = hints[state.role] || hints.user;
+
+      const btns = [];
+      if (isAdmin()) btns.push(`<button type="button" class="btn btn-primary btn-sm" data-go="users">View members</button>`);
+      if (isAdmin()) btns.push(`<button type="button" class="btn btn-secondary btn-sm" data-go="staff">Add staff</button>`);
+      if (canManageCatalog()) btns.push(`<button type="button" class="btn btn-primary btn-sm" data-go="books">Open catalog</button>`);
+      if (canManageLoans()) btns.push(`<button type="button" class="btn btn-secondary btn-sm" data-go="loans">Open loans</button>`);
+      btns.push(`<button type="button" class="btn btn-secondary btn-sm" data-go="account">My profile</button>`);
+      actions.innerHTML = `<div class="toolbar">${btns.join("")}</div>`;
+      actions.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => goPage(b.dataset.go)));
+    }
+
+    async function loadUsers() {
+      if (!isAdmin()) return;
+      try {
+        state.users = await api("/api/v1/users");
+        renderUsersTable();
+      } catch (e) {
+        toast(e.message, true);
+      }
+    }
+
+    function renderUsersTable() {
+      const q = ($("usersSearch").value || "").trim().toLowerCase();
+      const list = !q ? state.users : state.users.filter((u) =>
+        `${u.username} ${u.email} ${u.role} ${u.phone || ""}`.toLowerCase().includes(q)
+      );
+      $("usersTable").innerHTML = list.length ? list.map((u) => `
+        <tr>
+          <td><strong>${esc(u.username)}</strong></td>
+          <td>${esc(u.email)}</td>
+          <td><span class="role-badge ${esc(u.role)}">${esc(u.role)}</span></td>
+          <td>${esc(u.phone || "—")}</td>
+          <td>
+            <button type="button" class="btn btn-secondary btn-sm" data-user-view="${esc(u._id)}">View</button>
+          </td>
+        </tr>
+      `).join("") : `<tr><td colspan="5"><div class="empty"><strong>No users</strong></div></td></tr>`;
+
+      $("usersTable").querySelectorAll("[data-user-view]").forEach((btn) => {
+        btn.addEventListener("click", () => viewUser(btn.getAttribute("data-user-view")));
+      });
+    }
+
+    async function viewUser(id) {
+      openModal("Loading…", "<p>Fetching member…</p>", "", true);
+      try {
+        const u = await api("/api/v1/users/" + encodeURIComponent(id));
+        const loans = u.loans || [];
+        const rows = loans.length ? loans.map((l) => `
+          <tr>
+            <td>${esc(l.book?.title || "—")}</td>
+            <td>${esc(l.days)} days</td>
+            <td class="mono">${esc((l.createdAt||"").slice(0,10))}</td>
+          </tr>
+        `).join("") : `<tr><td colspan="3">No loans</td></tr>`;
+        openModal(
+          `Member · ${u.username}`,
+          `<div class="profile-grid" style="margin-bottom:1rem">
+            <div><label>Email</label><div>${esc(u.email)}</div></div>
+            <div><label>Role</label><div>${esc(u.role)}</div></div>
+            <div><label>Phone</label><div>${esc(u.phone||"—")}</div></div>
+            <div><label>Age</label><div>${esc(u.age)}</div></div>
+          </div>
+          <h4 style="margin:0 0 0.5rem">Loan history (${loans.length})</h4>
+          <div class="table-wrap"><table><thead><tr><th>Book</th><th>Duration</th><th>Date</th></tr></thead><tbody>${rows}</tbody></table></div>`,
+          `<button type="button" class="btn btn-secondary" id="mClose">Close</button>`,
+          true
+        );
+        $("mClose").onclick = closeModal;
+      } catch (e) {
+        openModal("Error", `<p>${esc(e.message)}</p>`, `<button type="button" class="btn btn-secondary" id="mClose">Close</button>`);
+        $("mClose").onclick = closeModal;
+      }
+    }
+
+    async function loadBooks() {
+      try {
+        state.books = await api("/api/v1/books");
+        renderBooksTable();
+      } catch (e) { toast(e.message, true); }
+    }
+
+    function renderBooksTable() {
+      const q = ($("booksSearch").value || "").trim().toLowerCase();
+      const list = !q ? state.books : state.books.filter((b) =>
+        `${b.title} ${b.author}`.toLowerCase().includes(q)
+      );
+      const canEdit = canManageCatalog();
+      $("booksTable").innerHTML = list.length ? list.map((b) => `
+        <tr>
+          <td><strong>${esc(b.title)}</strong></td>
+          <td>${esc(b.author)}</td>
+          <td class="mono">${Number(b.price).toFixed(2)}</td>
+          <td>${b.isLoaned ? '<span class="tag warn">On loan</span>' : '<span class="tag ok">Available</span>'}</td>
+          <td>
+            <button type="button" class="btn btn-secondary btn-sm" data-book-view="${esc(b._id)}">Details</button>
+            ${canEdit ? `<button type="button" class="btn btn-secondary btn-sm" data-book-edit="${esc(b._id)}">Edit</button>` : ""}
+            ${canEdit ? `<button type="button" class="btn btn-danger btn-sm" data-book-del="${esc(b._id)}">Delete</button>` : ""}
+          </td>
+        </tr>
+      `).join("") : `<tr><td colspan="5"><div class="empty"><strong>No books</strong></div></td></tr>`;
+
+      $("booksTable").querySelectorAll("[data-book-view]").forEach((btn) => {
+        btn.addEventListener("click", () => viewBook(btn.getAttribute("data-book-view")));
+      });
+      $("booksTable").querySelectorAll("[data-book-edit]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const b = state.books.find((x) => x._id === btn.getAttribute("data-book-edit"));
+          openBookForm(b);
+        });
+      });
+      $("booksTable").querySelectorAll("[data-book-del]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          if (!confirm("Delete this book?")) return;
+          try {
+            await api("/api/v1/books/" + btn.getAttribute("data-book-del"), { method: "DELETE" });
+            toast("Book deleted");
+            loadBooks();
+          } catch (e) { toast(e.message, true); }
+        });
+      });
+    }
+
+    async function viewBook(id) {
+      openModal("Loading…", "<p>…</p>", "", true);
+      try {
+        const b = await api("/api/v1/books/" + encodeURIComponent(id));
+        const loans = b.loans || [];
+        const rows = loans.length ? loans.map((l) => `
+          <tr><td>${esc(l.user?.username || "—")}</td><td>${esc(l.days)}d</td><td class="mono">${esc((l.createdAt||"").slice(0,10))}</td></tr>
+        `).join("") : `<tr><td colspan="3">No loans yet</td></tr>`;
+        openModal(`Book · ${b.title}`, `
+          <p><strong>${esc(b.author)}</strong> · $${Number(b.price).toFixed(2)} · ${b.isLoaned ? "On loan" : "Available"}</p>
+          <h4>Loan history</h4>
+          <div class="table-wrap"><table><thead><tr><th>Borrower</th><th>Days</th><th>Date</th></tr></thead><tbody>${rows}</tbody></table></div>
+        `, `<button type="button" class="btn btn-secondary" id="mClose">Close</button>`, true);
+        $("mClose").onclick = closeModal;
+      } catch (e) {
+        openModal("Error", esc(e.message), `<button type="button" class="btn btn-secondary" id="mClose">Close</button>`);
+        $("mClose").onclick = closeModal;
+      }
+    }
+
+    function openBookForm(book) {
+      const isEdit = !!book;
+      openModal(isEdit ? "Edit book" : "Add book", `
+        <form id="bookForm">
+          <div class="field"><label>Title</label><input name="title" value="${esc(book?.title||"")}" required /></div>
+          <div class="field"><label>Author</label><input name="author" value="${esc(book?.author||"")}" required /></div>
+          <div class="field"><label>Price</label><input name="price" type="number" step="0.01" value="${esc(book?.price??"")}" required /></div>
+        </form>
+      `, `
+        <button type="button" class="btn btn-secondary" id="mCancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="mSave">${isEdit ? "Save" : "Create"}</button>
+      `);
+      $("mCancel").onclick = closeModal;
+      $("mSave").onclick = async () => {
+        const f = $("bookForm");
+        const payload = {
+          title: f.title.value.trim(),
+          author: f.author.value.trim(),
+          price: Number(f.price.value),
+        };
+        try {
+          if (isEdit) {
+            await api("/api/v1/books/" + book._id, { method: "PUT", body: JSON.stringify(payload) });
+            toast("Book updated");
+          } else {
+            await api("/api/v1/books", { method: "POST", body: JSON.stringify(payload) });
+            toast("Book created");
+          }
+          closeModal();
+          loadBooks();
+        } catch (e) { toast(e.message, true); }
+      };
+    }
+
+    async function loadLoans() {
+      try {
+        state.loans = await api("/api/v1/loans");
+        if (canManageLoans() && !state.users.length && isAdmin()) {
+          state.users = await api("/api/v1/users");
+        }
+        if (canManageLoans() && !state.books.length) {
+          state.books = await api("/api/v1/books");
+        }
+        renderLoansTable();
+      } catch (e) { toast(e.message, true); }
+    }
+
+    function renderLoansTable() {
+      const canEdit = canManageLoans();
+      $("loansTable").innerHTML = state.loans.length ? state.loans.map((l) => `
+        <tr>
+          <td>${esc(l.user?.username || l.user?.email || "—")}</td>
+          <td>${esc(l.book?.title || "—")}</td>
+          <td>${esc(l.days)}</td>
+          <td class="mono">${esc((l.createdAt||"").slice(0,10))}</td>
+          <td>${canEdit ? `<button type="button" class="btn btn-secondary btn-sm" data-return="${esc(l.user?._id||l.user)}">Return</button>` : "—"}</td>
+        </tr>
+      `).join("") : `<tr><td colspan="5"><div class="empty"><strong>No loans</strong></div></td></tr>`;
+
+      $("loansTable").querySelectorAll("[data-return]").forEach((btn) => {
+        btn.addEventListener("click", () => returnLoan(btn.getAttribute("data-return")));
+      });
+    }
+
+    function openLoanForm() {
+      const users = state.users.length ? state.users : [];
+      const userOpts = users.map((u) => `<option value="${esc(u._id)}">${esc(u.username)} (${esc(u.email)})</option>`).join("");
+      const borrowerField = users.length
+        ? `<div class="field"><label>Borrower</label><select name="user" required>${userOpts}</select></div>`
+        : `<div class="field"><label>Borrower ID</label><input name="user" required placeholder="MongoDB user ObjectId" /><p style="font-size:0.8rem;color:var(--muted);margin:0.35rem 0 0">Paste the member id (admins can copy it from Members).</p></div>`;
+      const bookOpts = state.books.map((b) =>
+        `<option value="${esc(b._id)}" ${b.isLoaned ? "disabled" : ""}>${esc(b.title)}${b.isLoaned ? " (loaned)" : ""}</option>`
+      ).join("");
+
+      openModal("New loan", `
+        <form id="loanForm">
+          ${borrowerField}
+          <div class="field"><label>Book</label><select name="book" required>${bookOpts}</select></div>
+          <div class="field"><label>Days</label><input name="days" type="number" min="1" value="14" required /></div>
+        </form>
+      `, `
+        <button type="button" class="btn btn-secondary" id="mCancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="mSave">Create loan</button>
+      `);
+
+      $("mCancel").onclick = closeModal;
+      $("mSave").onclick = async () => {
+        const f = $("loanForm");
+        try {
+          await api("/api/v1/loans", {
+            method: "POST",
+            body: JSON.stringify({
+              user: f.user.value,
+              book: f.book.value,
+              days: Number(f.days.value),
+            }),
+          });
+          toast("Loan created");
+          closeModal();
+          loadLoans();
+          loadBooks();
+        } catch (e) { toast(e.message, true); }
+      };
+    }
+
+    async function returnLoan(userId) {
+      if (!userId) return;
+      try {
+        await api("/api/v1/loans/return/" + encodeURIComponent(userId), {
+          method: "PUT",
+          body: JSON.stringify({ user: userId }),
+        });
+        toast("Book returned");
+        loadLoans();
+        loadBooks();
+      } catch (e) { toast(e.message, true); }
+    }
+
+    /* —— Auth flows —— */
+    document.querySelectorAll("[data-auth-tab]").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll("[data-auth-tab]").forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+        const isReg = tab.dataset.authTab === "register";
+        $("loginForm").classList.toggle("hidden", isReg);
+        $("registerForm").classList.toggle("hidden", !isReg);
+      });
+    });
+
+    $("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      try {
+        const data = await api("/api/v1/auth/login", {
+          method: "POST",
+          body: JSON.stringify({
+            email: $("loginEmail").value.trim(),
+            password: $("loginPassword").value,
+          }),
+        });
+        state.token = data.token;
+        state.role = data.role || "user";
+        localStorage.setItem(STORAGE.token, state.token);
+        localStorage.setItem(STORAGE.role, state.role);
+        toast("Welcome back");
+        await loadProfile();
+        showApp();
+      } catch (err) {
+        toast(err.message, true);
+      }
+    });
+
+    $("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      try {
+        await api("/api/v1/auth/register", {
+          method: "POST",
+          body: JSON.stringify({
+            username: $("regUsername").value.trim(),
+            email: $("regEmail").value.trim(),
+            password: $("regPassword").value,
+            age: Number($("regAge").value),
+            phone: $("regPhone").value.trim() || undefined,
+          }),
+        });
+        toast("Account created — please sign in");
+        document.querySelector('[data-auth-tab="login"]').click();
+      } catch (err) {
+        toast(err.message, true);
+      }
+    });
+
+    $("staffForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      try {
+        await api("/api/v1/users/data-entry", {
+          method: "POST",
+          body: JSON.stringify({
+            username: f.username.value.trim(),
+            email: f.email.value.trim(),
+            password: f.password.value,
+            age: Number(f.age.value),
+            phone: f.phone.value.trim() || undefined,
+          }),
+        });
+        toast("Staff account created");
+        f.reset();
+      } catch (err) {
+        toast(err.message, true);
+      }
+    });
+
+    $("btnLogout").addEventListener("click", async () => {
+      try {
+        if (state.token) await api("/api/v1/auth/logout", { method: "POST" });
+      } catch (_) {}
+      logout();
+    });
+
+    $("modalClose").addEventListener("click", closeModal);
+    $("modalBg").addEventListener("click", (e) => { if (e.target === $("modalBg")) closeModal(); });
+
+    $("btnReloadUsers").addEventListener("click", loadUsers);
+    $("btnReloadBooks").addEventListener("click", loadBooks);
+    $("btnReloadLoans").addEventListener("click", loadLoans);
+    $("btnReloadProfile").addEventListener("click", loadProfile);
+    $("btnNewBook").addEventListener("click", () => openBookForm(null));
+    $("btnNewLoan").addEventListener("click", async () => {
+      if (isAdmin() && !state.users.length) {
+        try { state.users = await api("/api/v1/users"); } catch (_) {}
+      }
+      if (!state.books.length) {
+        try { state.books = await api("/api/v1/books"); } catch (_) {}
+      }
+      openLoanForm();
+    });
+    $("usersSearch").addEventListener("input", renderUsersTable);
+    $("booksSearch").addEventListener("input", renderBooksTable);
+
+    if ($("apiBaseInput")) {
+      $("apiBaseInput").addEventListener("input", syncApiBaseUi);
+      $("apiBaseInput").addEventListener("change", syncApiBaseUi);
+    }
+
+    /* Init */
+    if (isFileProtocol()) {
+      const banner = $("fileBanner");
+      if (banner) banner.classList.remove("hidden");
+      localStorage.setItem(STORAGE.base, DEFAULT_API);
+    } else if (isBadOrigin(localStorage.getItem(STORAGE.base))) {
+      localStorage.removeItem(STORAGE.base);
+    }
+
+    syncApiBaseUi();
+    loadServerConfig().then(syncApiBaseUi);
+
+    (async function init() {
+      if (state.token) {
+        try {
+          await loadProfile();
+          showApp();
+        } catch (_) {
+          logout(true);
+        }
+      } else {
+        showAuth();
+      }
+    })();
+  </script>
+</body>
+</html>

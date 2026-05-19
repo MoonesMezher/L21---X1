@@ -1,10 +1,39 @@
 const Loan = require("../models/Loan");
 const User = require("../models/User");
+const passwordService = require("../utils/passwordService");
 
 class UsersController {
     getAll = async (req, res) => {
         const users = await User.find();    
         res.status(200).json(users);
+    }
+    addDataEntry = async (req, res) => {
+        const { username, email, password, age, phone } = req.body;
+
+        const isEmailExist = await User.findOne({ email });
+        if (isEmailExist) {
+            return res.status(400).json({ message: "Email already exists" });
+        }
+
+        const isPhoneExist = await User.findOne({ phone });
+        if (isPhoneExist) {
+            return res.status(400).json({ message: "Phone already exists" });
+        }
+
+        const isUsernameExist = await User.findOne({ username });
+        if (isUsernameExist) {
+            return res.status(400).json({ message: "Username already exists" });
+        }
+
+        const hashedPassword = await passwordService.hashPassword(password);
+
+        let user = await User.create({ username, email, password: hashedPassword, age, phone, role: "data-entry" })
+
+        user = user.toObject()
+
+        delete user.password;
+
+        return res.status(201).json({ message: "User created successfully", user })
     }
     getOne = async (req, res) => {
         const id = req.params.id;

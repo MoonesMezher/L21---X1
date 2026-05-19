@@ -31,7 +31,6 @@ class AuthController {
 
         return res.status(201).json({ message: "User created successfully", user })
     }
-
     login = async (req, res) => {
         const { email, password } = req.body;
 
@@ -47,12 +46,22 @@ class AuthController {
             return res.status(400).json({ message: "Invalid Credintails" });
         }
 
-        const token = jwtService.genrateToken({ email, userId: user._id });
+        const token = jwtService.genrateToken({ email, userId: user._id, role: user.role });
 
-        res.status(200).json({ message: "Login successful", token })
+        res.status(200).json({ message: "Login successful", token, role: user.role })
     }
     logout = async (req, res) => {
         res.status(200).json({ message: "Logout successful" })
+    }
+
+    profile = async (req, res) => {
+        const user = await User.findById(req._user.userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        const data = user.toObject();
+        delete data.password;
+        return res.status(200).json({ data });
     }
 }
 

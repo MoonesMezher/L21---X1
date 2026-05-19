@@ -5,6 +5,8 @@ const asyncHandler = require("../utils/asyncHandler");
 const authController = require("../controllers/auth.controller");
 const auth = require("../middlewares/auth");
 
+router.get('/profile', [auth], asyncHandler(authController.profile))
+
 router.post('/register', asyncHandler(authController.register))
 
 router.post('/login', asyncHandler(authController.login))
