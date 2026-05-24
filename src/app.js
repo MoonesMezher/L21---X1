@@ -1,26 +1,30 @@
 require("dotenv").config();
-const path = require("path");
 const express = require("express");
-const cors = require("cors");
 const app = express();
+/* const path = require("path");
+const cors = require("cors"); */
 
 const morgan = require("morgan");
 const mongoose = require("mongoose");
 const errorHandler = require("./middlewares/errorHandler");
 const notFound = require("./middlewares/notFound");
+const { apiLimiter } = require("./middlewares/limiter");
+const xssSanitize = require("./middlewares/xss");
 
-const PUBLIC_DIR = path.join(__dirname, "..", "public");
-const DEFAULT_API_BASE = `http://localhost:${process.env.PORT || 3000}`;
+/* const PUBLIC_DIR = path.join(__dirname, "..", "public");
+const DEFAULT_API_BASE = `http://localhost:${process.env.PORT || 3000}`; */
 
-app.use(cors({
+/* app.use(cors({
     origin: true,
     credentials: true,
-}));
+})); */
 app.use(express.json());
 app.use(morgan("dev"));
+app.use(apiLimiter);
+app.use(xssSanitize)
 
 /** Portal + static UI — always use http://localhost:PORT, not file:// */
-app.get("/", (req, res) => {
+/* app.get("/", (req, res) => {
     res.sendFile(path.join(PUBLIC_DIR, "portal.html"));
 });
 
@@ -36,7 +40,7 @@ app.get("/api/config", (req, res) => {
     });
 });
 
-app.use(express.static(PUBLIC_DIR));
+app.use(express.static(PUBLIC_DIR)); */
 
 app.get("/api/health", (req, res) => res.status(200).json({ message: "API is healthy" }));
 

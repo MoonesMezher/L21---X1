@@ -53,7 +53,6 @@ class AuthController {
     logout = async (req, res) => {
         res.status(200).json({ message: "Logout successful" })
     }
-
     profile = async (req, res) => {
         const user = await User.findById(req._user.userId);
         if (!user) {
