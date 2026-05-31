@@ -54,11 +54,11 @@ app.use("/api/v1/loans", require("./routes/loans.route"));
 app.use(errorHandler);
 app.use(notFound);
 
-mongoose.connect(process.env.MONGODB_URL)
+/* mongoose.connect(process.env.MONGODB_URL)
     .then(() => {
-        console.log("Connected to MongoDB")
+        console.log("Connected to MongoDB") */
         app.listen(process.env.PORT, () => {
             console.log(`Server is running on port ${process.env.PORT}`);
         })
-    })
-    .catch((err) => console.error("Could not connect to MongoDB", err));
+    /* })
+    .catch((err) => console.error("Could not connect to MongoDB", err)); */
