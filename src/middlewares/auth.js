@@ -1,16 +1,20 @@
 const User = require('../models/User');
+const cookiesService = require('../utils/cookiesService');
 const jwtService = require('../utils/jwtService');
 const auth = async (req, res, next) => {
     try {
-        const { authorization } = req.headers; // Bearer <token>
-    
+        // const { authorization } = req.headers; // Bearer <token>
+
+        const authorization = cookiesService.getData(req, "accessToken");
+
         if(!authorization) {
             return res.status(401).json({
                 message: "Unauthorized"
             });
         }
     
-        const token = authorization.split(" ")[1];
+        /* const token = authorization.split(" ")[1]; */
+        const token = authorization;
 
         const decoded = jwtService.verifyToken(token);
 

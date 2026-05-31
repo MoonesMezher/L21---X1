@@ -16,6 +16,9 @@ const bookSchema = new mongoose.Schema({
     isLoaned: {
         type: Boolean,
         default: false
+    },
+    coverImage: {
+        type: String
     }
 }, { timestamps: true });
 

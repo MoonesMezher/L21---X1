@@ -19,8 +19,8 @@ class BooksController {
         res.status(200).json(payload);
     }
     add = async (req, res) => {
-        const { title, author, price } = req.body;
-        const book = await Book.create({ title, author, price });
+        const { title, author, price, cover } = req.body;
+        const book = await Book.create({ title, author, price, coverImage: cover });
         res.status(201).json(book);
     }
     update = async (req, res) => {

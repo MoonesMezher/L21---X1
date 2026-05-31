@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const cookiesService = require("../utils/cookiesService");
 const jwtService = require("../utils/jwtService");
 const passwordService = require("../utils/passwordService");
 
@@ -48,9 +49,12 @@ class AuthController {
 
         const token = jwtService.genrateToken({ email, userId: user._id, role: user.role });
 
-        res.status(200).json({ message: "Login successful", token, role: user.role })
+        cookiesService.setData(res, "accessToken", token)
+
+        res.status(200).json({ message: "Login successful", role: user.role })
     }
     logout = async (req, res) => {
+        cookiesService.clearData(res, "accessToken")
         res.status(200).json({ message: "Logout successful" })
     }
     profile = async (req, res) => {
